@@ -27,7 +27,7 @@
     :author "Keith James"
     :version "0.1.0"
     :licence "GPL v3"
-    :depends-on (:cffi)
+    :depends-on (:cffi :cl-gp-utilities)
     :components ((:module :cl-mmap
                           :pathname "src/"
                           :components ((:file "package")

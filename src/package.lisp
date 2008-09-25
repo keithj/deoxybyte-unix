@@ -16,7 +16,7 @@
 ;;;
 
 (defpackage #:cl-mmap
-  (:use #:common-lisp #:cffi)
+  (:use #:common-lisp #:cffi :cl-gp-utilities)
   (:nicknames #:mm)
   (:export
    ;; Constants
@@ -44,10 +44,10 @@
 
    ;; Generic functions
    #:filespec-of
+   #:delete-of
    #:length-of
    #:in-memory-p
    #:munmap
 
    #:mref
-   #:free-mapped-vector
-   #:delete-mapped-vector))
+   #:free-mapped-vector))

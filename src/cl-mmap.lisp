@@ -21,6 +21,9 @@
   ((filespec :initform nil
              :initarg :filespec
              :reader filespec-of)
+   (delete :initform nil
+           :initarg :delete
+           :reader delete-of)
    (length :initform nil
            :initarg :length
            :reader length-of)
@@ -54,10 +57,6 @@
 
 (defgeneric free-mapped-vector (mapped-vector)
   (:documentation "Frees the mapped memory used by MAPPED-VECTOR."))
-
-(defgeneric delete-mapped-vector (mapped-vector)
-  (:documentation "Frees the mapped memory used by MAPPED-VECTOR and
-  deletes the file specified by its FILESPEC slot."))
 
 (defun mmap (filespec &key (length 0) (foreign-type :char)
              (protection '(:shared)))
@@ -111,7 +110,7 @@
                              mmap-fd mmap-ptr in-memory) vector
          (let ((fd (cond (filespec
                           (touch filespec)
-                          (unix-open filespec '(:rdwr) #o644))
+                          (unix-open (namestring filespec) '(:rdwr) #o644))
                          (t
                           (make-tmp-fd))))
                (flen (* length (foreign-type-size ,foreign-type)))
@@ -129,13 +128,12 @@
                    in-memory t)))
          vector))
     (defmethod free-mapped-vector ((vector ,name))
-      (munmap vector))
-    (defmethod delete-mapped-vector ((vector ,name))
-      (munmap vector)
-      (with-slots (filespec)
-          vector
-        (when filespec
-          (delete-file filespec))))
+      (prog1
+          (munmap vector)
+        (with-slots (filespec delete)
+            vector
+          (when (and filespec delete)
+            (delete-file filespec)))))
     (defmethod mref ((vector ,name) (index fixnum))
       (declare (optimize (speed 3) (safety 1)))
       (with-slots (length mmap-ptr) vector
@@ -155,7 +153,8 @@
 (define-mapped-vector mapped-vector-float :float)
 (define-mapped-vector mapped-vector-double :double)
 
-(defmacro with-mapped-vector ((var class &rest initargs) &body body)
+(defmacro with-mapped-vector ((var class &rest initargs)
+                              &body body)
   `(let ((,var (make-instance ,class ,@initargs)))
     (unwind-protect
          (progn

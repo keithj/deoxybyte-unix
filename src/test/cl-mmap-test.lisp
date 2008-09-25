@@ -24,8 +24,7 @@
 (deftestsuite cl-mmap-tests ()
   ())
 
-(addtest (cl-mmap-tests)
-  mvector-char-ops
+(addtest (cl-mmap-tests) mvector-char-ops
   (let ((vec (make-instance 'mapped-vector-char
                             :length (length *ascii-characters*))))
     (unwind-protect
@@ -39,8 +38,7 @@
              (ensure (equalp *ascii-characters* contents))))
       (ensure (free-mapped-vector vec)))))
 
-(addtest (cl-mmap-tests)
-  mvector-ushort-ops
+(addtest (cl-mmap-tests) mvector-ushort-ops
   (let ((vec (make-instance 'mapped-vector-ushort
                             :length (1- (expt 2 16)))))
     (unwind-protect
@@ -50,6 +48,19 @@
               do (setf (mref vec i) i))
            (loop
               for i from 0 below (length-of vec)
-              do (ensure (= i (mref vec i)))))
-    (ensure (free-mapped-vector vec)))))
+              do (ensure (= i (mref vec i))))
+           ;; test incf specifically
+           (loop
+              for i from 0 below (length-of vec)
+              do (incf (mref vec i)))
+           (loop
+              for i from 0 below (length-of vec)
+              do (ensure (= (mref vec i) (1+ i)))))
+      (ensure (free-mapped-vector vec)))))
 
+(addtest (cl-mmap-tests) touch
+  (let ((test-file (merge-pathnames "data/touch_test.txt")))
+    (ensure (not (probe-file test-file)))
+    (mm::touch test-file)
+    (ensure (probe-file test-file))
+    (delete-file test-file)))
