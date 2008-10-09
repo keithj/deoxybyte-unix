@@ -17,8 +17,13 @@
 
 (in-package :cl-mmap)
 
-(defctype off-t :uint64
+(defctype off-t #+x86    :uint32
+                #+x86-64 :uint64
   "File offset type for seeking within a mmapped file.")
+
+(defctype size-t #+x86    :uint32
+                 #+x86-64 :uint64
+  "File size for mmapped files.")
 
 (defcvar ("errno" *error-number*) :int)
 
@@ -71,18 +76,17 @@
 (defcfun ("write" unix-write) :int
   (file-descriptor :int)
   (value :string)
-  (count :int))
+  (count size-t))
 
 
 (defcfun ("mmap" unix-mmap) :pointer
   (address :pointer)
-  (length :unsigned-int)
+  (length size-t)
   (protection protection-flags)
   (flags map-flags)
   (file-descriptor :int)
-  (offset :int))
+  (offset off-t))
 
 (defcfun ("munmap" unix-munmap) :int
   (address :pointer)
-  (length :unsigned-int))
-
+  (length size-t))

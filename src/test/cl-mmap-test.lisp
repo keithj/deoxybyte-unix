@@ -58,6 +58,37 @@
               do (ensure (= (mref vec i) (1+ i)))))
       (ensure (free-mapped-vector vec)))))
 
+(addtest (cl-mmap-tests) mvector-initial-element
+  (let ((vec1 (make-instance 'mapped-vector-ushort :length 100))
+        (vec2 (make-instance 'mapped-vector-ushort :length 100
+                             :initial-element 1)))
+    (unwind-protect
+         (progn
+           (loop
+              for i from 0 below (length-of vec1)
+              do (ensure (zerop (mref vec1 i))))
+           (loop
+              for i from 0 below (length-of vec2)
+              do (ensure (= 1 (mref vec2 i)))))
+      (ensure (free-mapped-vector vec1))
+      (ensure (free-mapped-vector vec2)))))
+
+(addtest (cl-mmap-tests) mvector-bounds-check
+   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
+     (unwind-protect
+          (progn
+            (ensure (zerop (mref vec 0)))
+            (ensure (zerop (mref vec 99)))
+            (ensure-error
+              (mref vec -1))
+            (ensure-error
+              (mref vec 100))
+            (ensure-error
+              (setf (mref vec -1) 99))
+            (ensure-error
+              (setf (mref vec 100) 99)))
+       (ensure (free-mapped-vector vec)))))
+
 (addtest (cl-mmap-tests) touch
   (let ((test-file (merge-pathnames "data/touch_test.txt")))
     (ensure (not (probe-file test-file)))

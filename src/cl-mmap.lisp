@@ -105,7 +105,8 @@
        (:documentation ,(or docstring
                             (format nil "A mmapped vector of ~a."
                                     foreign-type))))
-     (defmethod initialize-instance :after ((vector ,name) &key)
+     (defmethod initialize-instance :after ((vector ,name) &key
+                                            (initial-element 0 init-elem-p))
        (with-slots (filespec length mmap-length foreign-type
                              mmap-fd mmap-ptr in-memory) vector
          (let ((fd (cond (filespec
@@ -126,7 +127,12 @@
                    mmap-fd (enlarge-file fd (1- flen))
                    mmap-ptr ptr
                    in-memory t)))
-         vector))
+         (if (and filespec (not init-elem-p)) ; data from file
+             vector
+           (loop
+              for i from 0 below length
+              do (setf (mref vector i) initial-element)
+              finally (return vector)))))
     (defmethod free-mapped-vector ((vector ,name))
       (prog1
           (munmap vector)
@@ -135,11 +141,11 @@
           (when (and filespec delete)
             (delete-file filespec)))))
     (defmethod mref ((vector ,name) (index fixnum))
-      (declare (optimize (speed 3) (safety 1)))
+      (declare (optimize (speed 3) (safety 0)))
       (with-slots (length mmap-ptr) vector
         (mem-aref mmap-ptr ,foreign-type index)))
     (defmethod (setf mref) (value (vector ,name) (index fixnum))
-      (declare (optimize (speed 3) (safety 1)))
+      (declare (optimize (speed 3) (safety 0)))
       (with-slots (length mmap-ptr) vector
         (declare (type fixnum length index))
         (setf (mem-aref mmap-ptr ,foreign-type index) value)))))
