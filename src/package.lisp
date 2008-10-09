@@ -16,7 +16,7 @@
 ;;;
 
 (defpackage #:cl-mmap
-  (:use #:common-lisp #:cffi :cl-gp-utilities)
+  (:use #:common-lisp #:cffi)
   (:nicknames #:mm)
   (:export
    ;; Constants
@@ -42,6 +42,9 @@
    #:mapped-vector-float
    #:mapped-vector-double
 
+   #:mapped-vector-int32
+   #:mapped-vector-uint32
+
    ;; Generic functions
    #:filespec-of
    #:delete-of
@@ -50,4 +53,6 @@
    #:munmap
 
    #:mref
-   #:free-mapped-vector))
+   #:free-mapped-vector)
+  (:documentation "This package provides a CLOS interface to Unix
+  mmapped files."))

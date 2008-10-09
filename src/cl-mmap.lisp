@@ -20,26 +20,46 @@
 (defclass mmapped-file ()
   ((filespec :initform nil
              :initarg :filespec
-             :reader filespec-of)
+             :reader filespec-of
+             :documentation "A user-supplied pathname designator for
+             the file to be mmapped, or NIL an automatically generated
+             tmp file is to be used.")
    (delete :initform nil
            :initarg :delete
-           :reader delete-of)
+           :reader delete-of
+           :documentation "A flag to indicate whether the file
+           designated in the FILESPEC slot is to be deleted
+           automatically when the mmapped file is freed. If an
+           automatically generated tmp is to be used, the value of
+           this slot is ignored.")
    (length :initform nil
            :initarg :length
-           :reader length-of)
+           :reader length-of
+           :documentation "The length of the Lisp vector created when
+           the file is mmapped.")
    (foreign-type :initform :char
                  :initarg :foreign-type
-                 :reader foreign-type-of)
-   (mmap-length :initarg :mmap-length)
+                 :reader foreign-type-of
+                 :documentation "The foreign type of the elements to
+                 be stored in the vector.")
+   (mmap-length :initarg :mmap-length
+                :documentation "The number of bytes to be mmapped.")
    (mmap-fd :initform nil
-            :initarg :mmap-fd)
+            :initarg :mmap-fd
+            :documentation "The Unix file descriptor of the open
+            file.")
    (mmap-ptr :initform nil
-             :initarg :mmap-ptr)
+             :initarg :mmap-ptr
+             :documentation "The CFFI pointer returned by the mmap
+             foreign function.")
    (in-memory :initform nil
-              :initarg :in-memory)))
+              :initarg :in-memory
+              :documentation "A boolean value which is T if the file
+              is currently mmapped, or NIL otherwise.")))
 
 (defclass mapped-vector (mmapped-file)
-  ())
+  ()
+  (:documentation "A vector backed by a mmapped file."))
 
 (defgeneric munmap (mmapped-file)
   (:documentation "Frees the mapped memory used by MMAPPED-FILE and
@@ -60,12 +80,31 @@
 
 (defun mmap (filespec &key (length 0) (foreign-type :char)
              (protection '(:shared)))
+  "Maps a file into memory.
+
+Arguments:
+
+- filespec (pathname designator): The file to be mmapped.
+
+Key:
+
+- length (fixnum): The length of the Lisp vector created when the file
+  is mmapped.
+- foreign-type (symbol): The foreign type of the elements to be stored
+  in the vector.
+- protection (list symbol): The memory protection keyword flags used
+  in the mmap operation.
+
+Returns:
+
+- A pointer."
   (let ((fd (unix-open filespec '(:rdwr) #o644))
         (flen (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
       (error (unix-strerror *error-number*)))
-    (let ((ptr (unix-mmap (null-pointer) flen '(:write) protection fd offset)))
+    (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
+                          protection fd offset)))
       (when (null-pointer-p ptr)
         (error (unix-strerror *error-number*)))
       (make-instance 'mmapped-file :length length :foreign-type foreign-type
@@ -99,6 +138,9 @@
     (vector-bounds-check index length)))
 
 (defmacro define-mapped-vector (name foreign-type &optional docstring)
+  "Defines a mapped vector class NAME, with accompanying accessor
+methods \( {defmethod mref} \), specialized to store elements of
+FOREIGN-TYPE."
   `(progn
      (defclass ,name (mapped-vector)
        ()
@@ -118,8 +160,8 @@
                (offset 0))
            (when (= -1 fd)
              (error (unix-strerror *error-number*)))
-           (let ((ptr (unix-mmap (null-pointer) flen '(:write) '(:shared)
-                                 fd offset)))
+           (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
+                                 '(:shared) fd offset)))
              (when (null-pointer-p ptr)
                (error (unix-strerror *error-number*)))
              (setf foreign-type ,foreign-type
@@ -158,9 +200,14 @@
 (define-mapped-vector mapped-vector-uint :unsigned-int)
 (define-mapped-vector mapped-vector-float :float)
 (define-mapped-vector mapped-vector-double :double)
+(define-mapped-vector mapped-vector-int32 :int32)
+(define-mapped-vector mapped-vector-uint32 :uint32)
 
 (defmacro with-mapped-vector ((var class &rest initargs)
                               &body body)
+  "Executes BODY in the context of a newly instantiated
+{defclass mapped-vector} object of CLASS bound to VAR. The vector
+is safely munmapped after use."
   `(let ((,var (make-instance ,class ,@initargs)))
     (unwind-protect
          (progn
@@ -169,6 +216,8 @@
 
 (declaim (inline vector-bounds-check))
 (defun vector-bounds-check (index length)
+  "Performs a bounds check on INDEX with respect to LENGTH. Returns T
+if  0 <= INDEX < LENGTH, or raises an error otherwise."
   (declare (optimize (speed 3)))
   (declare (type fixnum index length))
   (unless (< -1 index length)
@@ -177,6 +226,8 @@
   t)
 
 (defun enlarge-file (fd new-length)
+  "Enlarges the open file designated by Unix file descriptor FD to
+NEW-LENGTH bytes."
   (when (= -1 (unix-lseek fd new-length :seek-set))
     (error (unix-strerror *error-number*)))
   (when (= -1 (unix-write fd "" 1))
@@ -184,6 +235,8 @@
   fd)
 
 (defun make-tmp-fd ()
+  "Returns a Unix file descriptor for a temporary file created with
+the C tmpfile function."
   (let ((file (unix-tmpfile))
         (fd nil))
     (when (null-pointer-p file)
@@ -194,6 +247,7 @@
     fd))
 
 (defun touch (filespec)
+  "Creates the file designated by FILESPEC, if it does not exist."
   (with-open-file (stream filespec :direction :output
                    :if-does-not-exist :create
                    :if-exists nil)))
