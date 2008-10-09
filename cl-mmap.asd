@@ -49,3 +49,13 @@
 (defmethod operation-done-p ((op test-op) (c (eql (find-system
                                                    'cl-mmap))))
   nil)
+
+(defmethod perform ((op cldoc-op) (c (eql (find-system
+                                           :cl-mmap))))
+  (unless (find-package :cl-mmap)
+    (operate 'load-op :cl-mmap))
+
+  (let ((*default-pathname-defaults* (component-pathname c))
+        (fn-sym (intern (string :extract-documentation) (string :cldoc)))
+        (op-sym (intern (string :html) (string :cldoc))))
+    (funcall fn-sym op-sym "./doc/html" c)))
