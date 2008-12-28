@@ -18,7 +18,7 @@
 (in-package #:cl-mmap-system)
 
 (defsystem cl-mmap-test
-    :depends-on (:cl-mmap :lift)
+    :depends-on (:cl-mmap)
     :components ((:module :cl-mmap-test
                           :serial t
                           :pathname "src/test/"

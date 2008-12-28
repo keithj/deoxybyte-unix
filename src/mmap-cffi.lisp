@@ -17,11 +17,11 @@
 
 (in-package :cl-mmap)
 
-(defctype off-t #+x86    :uint32
+(defctype off-t #-x86-64 :uint32
                 #+x86-64 :uint64
   "File offset type for seeking within a mmapped file.")
 
-(defctype size-t #+x86    :uint32
+(defctype size-t #-x86-64 :uint32
                  #+x86-64 :uint64
   "File size for mmapped files.")
 

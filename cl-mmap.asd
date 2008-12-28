@@ -17,45 +17,33 @@
 
 (in-package :cl-user)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (when (find-system :cl-system-utilities nil)
+    (asdf:operate 'asdf:load-op :cl-system-utilities)))
+
 (defpackage #:cl-mmap-system
-  (:use :common-lisp :asdf))
+  (:use :common-lisp :cl-system-utilities))
 
 (in-package #:cl-mmap-system)
 
 (defsystem cl-mmap
     :name "Common Lisp mmap"
     :author "Keith James"
-    :version "0.1.0"
+    :version "0.2.0"
     :licence "GPL v3"
     :depends-on (:cffi)
+    :in-order-to ((test-op (load-op :cl-mmap :cl-mmap-test)))
     :components ((:module :cl-mmap
+                          :serial t
                           :pathname "src/"
+
                           :components ((:file "package")
-                                       (:file "mmap-cffi"
-                                        :depends-on ("package"))
-                                       (:file "cl-mmap"
-                                        :depends-on ("package"
-                                                     "mmap-cffi"))))))
+                                       (:file "mmap-cffi")
+                                       (:file "cl-mmap")))
+                 (:lift-test-config :lift-tests
+                                    :pathname "cl-mmap-test.config"
+                                    :target-system :cl-mmap)
+                 (:cldoc-config :cldoc-documentation
+                                :pathname "doc/html"
+                                :target-system :cl-mmap)))
 
-(in-package #:asdf)
-
-(defmethod perform ((op test-op) (c (eql (find-system
-                                          'cl-mmap))))
-  (operate 'load-op :cl-mmap-test)
-  (let ((*default-pathname-defaults* (component-pathname c)))
-    (funcall (intern (string :run-tests) (string :lift))
-             :config "cl-mmap-test.config")))
-
-(defmethod operation-done-p ((op test-op) (c (eql (find-system
-                                                   'cl-mmap))))
-  nil)
-
-(defmethod perform ((op cldoc-op) (c (eql (find-system
-                                           :cl-mmap))))
-  (unless (find-package :cl-mmap)
-    (operate 'load-op :cl-mmap))
-
-  (let ((*default-pathname-defaults* (component-pathname c))
-        (fn-sym (intern (string :extract-documentation) (string :cldoc)))
-        (op-sym (intern (string :html) (string :cldoc))))
-    (funcall fn-sym op-sym "./doc/html" c)))

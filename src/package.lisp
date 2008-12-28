@@ -17,7 +17,7 @@
 
 (defpackage #:cl-mmap
   (:use #:common-lisp #:cffi)
-  (:nicknames #:mm)
+  (:nicknames #:mmp)
   (:export
    ;; Constants
 
@@ -45,6 +45,10 @@
    #:mapped-vector-int32
    #:mapped-vector-uint32
 
+   ;; Conditions
+   #:mmapped-file-error
+   #:mmapped-index-error
+   
    ;; Generic functions
    #:filespec-of
    #:delete-of

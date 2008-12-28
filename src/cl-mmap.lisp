@@ -61,6 +61,37 @@
   ()
   (:documentation "A vector backed by a mmapped file."))
 
+(define-condition mmapped-file-error (error)
+  ((text :initform nil
+         :initarg :text
+         :reader text-of
+         :documentation "Error message text.")
+   (mmapped-file :initarg :mmapped-file
+                 :reader mmapped-file-of
+                 :documentation "The mmapped file where the error occurred."))
+  (:report (lambda (condition stream)
+             (let ((mmf (mmapped-file-of condition)))
+               (format stream "mmapped file error in ~a ~a (~a)~@[: ~a~]"
+                       (filespec-of mmf) (foreign-type-of mmf)
+                       (length-of mmf)
+                       (text-of condition)))))
+  (:documentation "An error that is raised during an operation on a
+mmapped file."))
+
+(define-condition mmapped-index-error (mmapped-file-error)
+  ((index :initform nil
+          :initarg :index
+          :reader index-of
+          :documentation "The index that caused the error."))
+  (:report (lambda (condition stream)
+             (let ((mmf (mmapped-file-of condition)))
+               (format stream "mmapped file error in ~a ~a (~a) at index ~a~@[: ~a~]"
+                       (filespec-of mmf) (foreign-type-of mmf)
+                       (length-of mmf) (index-of condition)
+                       (text-of condition)))))
+  (:documentation "An error that is raised during an index operation
+on a mmapped file."))
+
 (defgeneric munmap (mmapped-file)
   (:documentation "Frees the mapped memory used by MMAPPED-FILE and
   closes the underlying file descriptor."))
@@ -128,14 +159,10 @@ Returns:
       t)))
 
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
-  (with-slots (length)
-      vector
-    (vector-bounds-check index length)))
+  (%vector-bounds-check vector index))
 
 (defmethod (setf mref) :before (value (vector mapped-vector) (index fixnum))
-  (with-slots (length)
-      vector
-    (vector-bounds-check index length)))
+  (%vector-bounds-check vector index))
 
 (defmacro define-mapped-vector (name foreign-type &optional docstring)
   "Defines a mapped vector class NAME, with accompanying accessor
@@ -214,15 +241,19 @@ is safely munmapped after use."
            ,@body)
       (free-mapped-vector ,var))))
 
-(declaim (inline vector-bounds-check))
-(defun vector-bounds-check (index length)
+(declaim (inline %vector-bounds-check))
+(defun %vector-bounds-check (vector index)
   "Performs a bounds check on INDEX with respect to LENGTH. Returns T
 if  0 <= INDEX < LENGTH, or raises an error otherwise."
   (declare (optimize (speed 3)))
-  (declare (type fixnum index length))
-  (unless (< -1 index length)
-    (error "Index ~a out of bounds: expected a value >= 0 and < ~a."
-           index length))
+  (with-accessors ((length length-of))
+      vector
+    (declare (type fixnum index length))
+    (unless (< -1 index length)
+      (error 'mmapped-index-error
+             :mmapped-file vector
+             :index index
+             :text "index out of bounds")))
   t)
 
 (defun enlarge-file (fd new-length)

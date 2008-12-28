@@ -15,15 +15,11 @@ fasl:
 	--eval "(progn (asdf:oos 'asdf:compile-op :cl-mmap) (quit))"
 
 doc:
-	sbcl --noinform --noprint \
-	--eval "(progn (asdf:oos 'asdf:cldoc-op :cl-mmap) (quit))"
+	sbcl --noinform --noprint --load make-doc.lisp
 
 test:
 	sbcl --noinform --noprint \
 	--eval "(progn (asdf:oos 'asdf:test-op :cl-mmap) (quit))"
-
-coverage:
-	sbcl --dynamic-space-size 512 --load src/test-coverage-report.lisp
 
 clean:
 	find . -name \*.fasl -exec rm {} \;
