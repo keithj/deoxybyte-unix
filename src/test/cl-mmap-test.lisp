@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-8, Keith James. All rights reserved.
+;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -92,6 +92,6 @@
 (addtest (cl-mmap-tests) touch
   (let ((test-file (merge-pathnames "data/touch_test.txt")))
     (ensure (not (probe-file test-file)))
-    (mm::touch test-file)
+    (mmp::touch test-file)
     (ensure (probe-file test-file))
     (delete-file test-file)))

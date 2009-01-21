@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-8, Keith James. All rights reserved.
+;;; Copyright (C) 2007-2009, Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -18,32 +18,31 @@
 (in-package :cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (when (find-system :cl-system-utilities nil)
+  (when (asdf:find-system :cl-system-utilities nil)
     (asdf:operate 'asdf:load-op :cl-system-utilities)))
 
 (defpackage #:cl-mmap-system
-  (:use :common-lisp :cl-system-utilities))
+  (:use :common-lisp :asdf :cl-system-utilities))
 
 (in-package #:cl-mmap-system)
 
 (defsystem cl-mmap
-    :name "Common Lisp mmap"
-    :author "Keith James"
-    :version "0.2.0"
-    :licence "GPL v3"
-    :depends-on (:cffi)
-    :in-order-to ((test-op (load-op :cl-mmap :cl-mmap-test)))
-    :components ((:module :cl-mmap
-                          :serial t
-                          :pathname "src/"
-
-                          :components ((:file "package")
-                                       (:file "mmap-cffi")
-                                       (:file "cl-mmap")))
-                 (:lift-test-config :lift-tests
-                                    :pathname "cl-mmap-test.config"
-                                    :target-system :cl-mmap)
-                 (:cldoc-config :cldoc-documentation
-                                :pathname "doc/html"
-                                :target-system :cl-mmap)))
+  :name "Common Lisp mmap"
+  :author "Keith James"
+  :version "0.2.0"
+  :licence "GPL v3"
+  :in-order-to ((test-op (load-op :cl-mmap :cl-mmap-test)))
+  :depends-on (:cffi)
+  :components ((:module :cl-mmap-core
+                        :serial t
+                        :pathname "src/"
+                        :components ((:file "package")
+                                     (:file "mmap-cffi")
+                                     (:file "cl-mmap")))
+               (:lift-test-config :lift-tests
+                                  :pathname "cl-mmap-test.config"
+                                  :target-system :cl-mmap)
+               (:cldoc-config :cldoc-documentation
+                              :pathname "doc/html"
+                              :target-system :cl-mmap)))
 
