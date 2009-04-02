@@ -32,7 +32,7 @@
            automatically when the mmapped file is freed. If an
            automatically generated tmp is to be used, the value of
            this slot is ignored.")
-   (length :initform nil
+   (length :initform (error "A length argument is required.")
            :initarg :length
            :reader length-of
            :documentation "The length of the Lisp vector created when
@@ -177,9 +177,11 @@ FOREIGN-TYPE."
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
        (with-slots (filespec length mmap-length foreign-type
-                             mmap-fd mmap-ptr in-memory) vector
+                             mmap-fd mmap-ptr in-memory)
+           vector
          (let ((fd (cond (filespec
-                          (touch filespec)
+                          (unless (probe-file filespec)
+                            (ensure-file filespec))
                           (unix-open (namestring filespec) '(:rdwr) #o644))
                          (t
                           (make-tmp-fd))))
@@ -193,15 +195,19 @@ FOREIGN-TYPE."
                (error (unix-strerror *error-number*)))
              (setf foreign-type ,foreign-type
                    mmap-length flen
-                   mmap-fd (enlarge-file fd (1- flen))
                    mmap-ptr ptr
-                   in-memory t)))
-         (if (and filespec (not init-elem-p)) ; data from file
-             vector
-           (loop
-              for i from 0 below length
-              do (setf (mref vector i) initial-element)
-              finally (return vector)))))
+                   in-memory t))
+           ;; If a file is supplied and the current contents are to be
+           ;; used, do not enlarge the file
+           (cond ((and filespec (not init-elem-p))
+                  (setf mmap-fd fd)
+                  vector)
+                 (t
+                  (setf mmap-fd (enlarge-file fd (1- flen)))
+                  (loop
+                     for i from 0 below length
+                     do (setf (mref vector i) initial-element)
+                     finally (return vector)))))))
     (defmethod free-mapped-vector ((vector ,name))
       (prog1
           (munmap vector)
@@ -276,9 +282,3 @@ the C tmpfile function."
          (setf fd (unix-fileno file))
       (foreign-free file))
     fd))
-
-(defun touch (filespec)
-  "Creates the file designated by FILESPEC, if it does not exist."
-  (with-open-file (stream filespec :direction :output
-                   :if-does-not-exist :create
-                   :if-exists nil)))

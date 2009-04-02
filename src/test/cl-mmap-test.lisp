@@ -88,10 +88,3 @@
             (ensure-error
               (setf (mref vec 100) 99)))
        (ensure (free-mapped-vector vec)))))
-
-(addtest (cl-mmap-tests) touch
-  (let ((test-file (merge-pathnames "data/touch_test.txt")))
-    (ensure (not (probe-file test-file)))
-    (mmp::touch test-file)
-    (ensure (probe-file test-file))
-    (delete-file test-file)))

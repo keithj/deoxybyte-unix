@@ -16,7 +16,7 @@
 ;;;
 
 (defpackage #:cl-mmap
-  (:use #:common-lisp #:cffi)
+  (:use #:common-lisp #:cffi :cl-io-utilities)
   (:nicknames #:mmp)
   (:export
    ;; Constants
