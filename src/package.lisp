@@ -35,15 +35,21 @@
    #:mapped-vector
    #:mapped-vector-char
    #:mapped-vector-uchar
+
    #:mapped-vector-short
    #:mapped-vector-ushort
+
    #:mapped-vector-int
    #:mapped-vector-uint
+
    #:mapped-vector-float
    #:mapped-vector-double
 
    #:mapped-vector-int32
    #:mapped-vector-uint32
+
+   #:mapped-vector-int16
+   #:mapped-vector-uint16
 
    ;; Conditions
    #:mmapped-file-error

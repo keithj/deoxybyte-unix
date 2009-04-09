@@ -181,7 +181,7 @@ FOREIGN-TYPE."
            vector
          (let ((fd (cond (filespec
                           (unless (probe-file filespec)
-                            (ensure-file filespec))
+                            (ensure-file-exists filespec))
                           (unix-open (namestring filespec) '(:rdwr) #o644))
                          (t
                           (make-tmp-fd))))
@@ -227,12 +227,19 @@ FOREIGN-TYPE."
 
 (define-mapped-vector mapped-vector-char :char)
 (define-mapped-vector mapped-vector-uchar :unsigned-char)
+
 (define-mapped-vector mapped-vector-short :short)
 (define-mapped-vector mapped-vector-ushort :unsigned-short)
+
 (define-mapped-vector mapped-vector-int :int)
 (define-mapped-vector mapped-vector-uint :unsigned-int)
+
 (define-mapped-vector mapped-vector-float :float)
 (define-mapped-vector mapped-vector-double :double)
+
+(define-mapped-vector mapped-vector-int16 :int16)
+(define-mapped-vector mapped-vector-uint16 :uint16)
+
 (define-mapped-vector mapped-vector-int32 :int32)
 (define-mapped-vector mapped-vector-uint32 :uint32)
 
