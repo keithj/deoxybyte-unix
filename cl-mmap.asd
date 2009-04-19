@@ -29,7 +29,6 @@
 (defsystem cl-mmap
   :name "Common Lisp mmap"
   :author "Keith James"
-  :version "0.3.0"
   :licence "GPL v3"
   :in-order-to ((test-op (load-op :cl-mmap :cl-mmap-test)))
   :depends-on (:cffi :cl-io-utilities)
