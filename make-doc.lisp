@@ -20,5 +20,5 @@
 (asdf:operate 'asdf:load-op :cl-system-utilities)
 (asdf:operate 'asdf:load-op :cl-mmap)
 
-(csu:document-system :cl-mmap)
+(su:document-system :cl-mmap)
 (quit)

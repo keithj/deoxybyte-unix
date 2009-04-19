@@ -19,6 +19,8 @@
   (:use #:common-lisp #:cffi :cl-io-utilities)
   (:nicknames #:mmp)
   (:export
+   ;; Specials
+   
    ;; Constants
 
    ;; Variables

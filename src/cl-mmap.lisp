@@ -129,7 +129,7 @@ Key:
 Returns:
 
 - A pointer."
-  (let ((fd (unix-open filespec '(:rdwr) #o644))
+  (let ((fd (unix-open (namestring filespec) '(:rdwr) #o644))
         (flen (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
