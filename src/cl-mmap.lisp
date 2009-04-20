@@ -179,12 +179,13 @@ FOREIGN-TYPE."
        (with-slots (filespec length mmap-length foreign-type
                              mmap-fd mmap-ptr in-memory)
            vector
-         (let ((fd (cond (filespec
-                          (unless (probe-file filespec)
-                            (ensure-file-exists filespec))
-                          (unix-open (namestring filespec) '(:rdwr) #o644))
-                         (t
-                          (make-tmp-fd))))
+         (let* ((file-exists (and filespec (probe-file filespec)))
+                (fd (cond (filespec
+                           (unless file-exists
+                             (ensure-file-exists filespec))
+                           (unix-open (namestring filespec) '(:rdwr) #o644))
+                          (t
+                           (make-tmp-fd))))
                (flen (* length (foreign-type-size ,foreign-type)))
                (offset 0))
            (when (= -1 fd)
@@ -197,9 +198,10 @@ FOREIGN-TYPE."
                    mmap-length flen
                    mmap-ptr ptr
                    in-memory t))
-           ;; If a file is supplied and the current contents are to be
-           ;; used, do not enlarge the file
-           (cond ((and filespec (not init-elem-p))
+           ;; If a file is supplied and the file exists and the
+           ;; current contents are to be used, do not enlarge the
+           ;; file
+           (cond ((and filespec file-exists (not init-elem-p))
                   (setf mmap-fd fd)
                   vector)
                  (t
