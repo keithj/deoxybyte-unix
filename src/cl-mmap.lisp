@@ -218,11 +218,11 @@ FOREIGN-TYPE."
           (when (and filespec delete)
             (delete-file filespec)))))
     (defmethod mref ((vector ,name) (index fixnum))
-      (declare (optimize (speed 3) (safety 0)))
+      (declare (optimize (speed 3) (safety 1)))
       (with-slots (length mmap-ptr) vector
         (mem-aref mmap-ptr ,foreign-type index)))
     (defmethod (setf mref) (value (vector ,name) (index fixnum))
-      (declare (optimize (speed 3) (safety 0)))
+      (declare (optimize (speed 3) (safety 1)))
       (with-slots (length mmap-ptr) vector
         (declare (type fixnum length index))
         (setf (mem-aref mmap-ptr ,foreign-type index) value)))))
@@ -283,11 +283,7 @@ NEW-LENGTH bytes."
 (defun make-tmp-fd ()
   "Returns a Unix file descriptor for a temporary file created with
 the C tmpfile function."
-  (let ((file (unix-tmpfile))
-        (fd nil))
+  (let ((file (unix-tmpfile)))
     (when (null-pointer-p file)
       (error (unix-strerror *error-number*)))
-    (unwind-protect
-         (setf fd (unix-fileno file))
-      (foreign-free file))
-    fd))
+    (unix-fileno file)))
