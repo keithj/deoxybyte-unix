@@ -44,12 +44,6 @@
                  be stored in the vector.")
    (mmap-length :initarg :mmap-length
                 :documentation "The number of bytes to be mmapped.")
-   (mmap-fptr :initform nil
-              :initarg :mmap-fptr
-              :documentation "The CFFI pointer to the file stream
-              descriptor of the open file. This is used when a
-              temporary file is automatically opened using the Unix
-              tmpfile foreign function.")
    (mmap-fd :initform nil
             :initarg :mmap-fd
             :documentation "The Unix file descriptor of the open
@@ -91,7 +85,8 @@ mmapped file."))
           :documentation "The index that caused the error."))
   (:report (lambda (condition stream)
              (let ((mmf (mmapped-file-of condition)))
-               (format stream "mmapped file error in ~a ~a (~a) at index ~a~@[: ~a~]"
+               (format stream (txt "mmapped file error in ~a ~a (~a)"
+                                   "at index ~a~@[: ~a~]")
                        (filespec-of mmf) (foreign-type-of mmf)
                        (length-of mmf) (index-of condition)
                        (text-of condition)))))
@@ -155,15 +150,13 @@ Returns:
     in-memory))
 
 (defmethod munmap ((obj mmapped-file))
-  (with-slots (length mmap-length mmap-fptr mmap-fd mmap-ptr in-memory)
+  (with-slots (length mmap-length mmap-fd mmap-ptr in-memory)
       obj
     (when in-memory
       (when (= -1 (unix-munmap mmap-ptr mmap-length))
         (error (unix-strerror *error-number*)))
       (when (= -1 (unix-close mmap-fd))
         (error (unix-strerror *error-number*)))
-      (when mmap-fptr
-        (foreign-free mmap-fptr))
       t)))
 
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
@@ -185,26 +178,23 @@ FOREIGN-TYPE."
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
        (with-slots (filespec length mmap-length foreign-type
-                             mmap-fptr mmap-fd mmap-ptr in-memory)
+                             mmap-fd mmap-ptr in-memory)
            vector
          (let ((file-exists (and filespec (probe-file filespec)))
                (flen (* length (foreign-type-size ,foreign-type)))
                (offset 0))
            (cond (file-exists
-                  (let ((fd (unix-open (namestring filespec) '(:rdwr) #o644)))
-                    (when (= -1 fd)
-                      (error (unix-strerror *error-number*)))
-                    (setf mmap-fd fd)))
+                  (setf mmap-fd (unix-open (namestring filespec)
+                                           '(:rdwr) #o644)))
                  (filespec
-                  (let ((fd (unix-open (namestring
-                                        (ensure-file-exists filespec))
-                                       '(:rdwr) #o644)))
-                    (when (= -1 fd)
-                      (error (unix-strerror *error-number*)))
-                    (setf mmap-fd fd)))
+                  (setf mmap-fd (unix-open (namestring
+                                            (ensure-file-exists filespec))
+                                           '(:rdwr) #o644)))
                  (t
-                  (setf mmap-fptr (make-tmp-file)
-                        mmap-fd (unix-fileno mmap-fptr))))
+                  (setf mmap-fd (unix-mkstemp
+                                 (copy-seq "/tmp/cl-mmap-XXXXXX")))))
+           (when (= -1 mmap-fd)
+             (error (unix-strerror *error-number*)))
            (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
                                  '(:shared) mmap-fd offset)))
              (when (null-pointer-p ptr)
@@ -289,10 +279,3 @@ NEW-LENGTH bytes."
     (error (unix-strerror *error-number*)))
   fd)
 
-(defun make-tmp-file ()
-  "Returns a Unix file stream descriptor for a temporary file created
-with the C tmpfile function."
-  (let ((file (unix-tmpfile)))
-    (when (null-pointer-p file)
-      (error (unix-strerror *error-number*)))
-    file))

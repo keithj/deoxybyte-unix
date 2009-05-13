@@ -16,7 +16,7 @@
 ;;;
 
 (defpackage #:cl-mmap
-  (:use #:common-lisp #:cffi :cl-io-utilities)
+  (:use #:common-lisp #:cffi :cl-gp-utilities :cl-io-utilities)
   (:nicknames #:mmp)
   (:export
    ;; Specials

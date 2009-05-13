@@ -54,7 +54,8 @@
 (defcfun ("strerror" unix-strerror) :string
   (errno :int))
 
-(defcfun ("tmpfile" unix-tmpfile) :pointer)
+(defcfun ("mkstemp" unix-mkstemp) :int
+  (template :string))
 
 (defcfun ("fileno" unix-fileno) :int
   (stream :pointer))
