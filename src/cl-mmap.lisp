@@ -44,6 +44,12 @@
                  be stored in the vector.")
    (mmap-length :initarg :mmap-length
                 :documentation "The number of bytes to be mmapped.")
+   (mmap-fptr :initform nil
+              :initarg :mmap-fptr
+              :documentation "The CFFI pointer to the file stream
+              descriptor of the open file. This is used when a
+              temporary file is automatically opened using the Unix
+              tmpfile foreign function.")
    (mmap-fd :initform nil
             :initarg :mmap-fd
             :documentation "The Unix file descriptor of the open
@@ -149,13 +155,15 @@ Returns:
     in-memory))
 
 (defmethod munmap ((obj mmapped-file))
-  (with-slots (length mmap-length mmap-fd mmap-ptr in-memory)
+  (with-slots (length mmap-length mmap-fptr mmap-fd mmap-ptr in-memory)
       obj
     (when in-memory
       (when (= -1 (unix-munmap mmap-ptr mmap-length))
         (error (unix-strerror *error-number*)))
       (when (= -1 (unix-close mmap-fd))
         (error (unix-strerror *error-number*)))
+      (when mmap-fptr
+        (foreign-free mmap-fptr))
       t)))
 
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
@@ -177,39 +185,40 @@ FOREIGN-TYPE."
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
        (with-slots (filespec length mmap-length foreign-type
-                             mmap-fd mmap-ptr in-memory)
+                             mmap-fptr mmap-fd mmap-ptr in-memory)
            vector
-         (let* ((file-exists (and filespec (probe-file filespec)))
-                (fd (cond (filespec
-                           (unless file-exists
-                             (ensure-file-exists filespec))
-                           (unix-open (namestring filespec) '(:rdwr) #o644))
-                          (t
-                           (make-tmp-fd))))
+         (let ((file-exists (and filespec (probe-file filespec)))
                (flen (* length (foreign-type-size ,foreign-type)))
                (offset 0))
-           (when (= -1 fd)
-             (error (unix-strerror *error-number*)))
+           (cond (file-exists
+                  (let ((fd (unix-open (namestring filespec) '(:rdwr) #o644)))
+                    (when (= -1 fd)
+                      (error (unix-strerror *error-number*)))
+                    (setf mmap-fd fd)))
+                 (filespec
+                  (let ((fd (unix-open (namestring
+                                        (ensure-file-exists filespec))
+                                       '(:rdwr) #o644)))
+                    (when (= -1 fd)
+                      (error (unix-strerror *error-number*)))
+                    (setf mmap-fd fd)))
+                 (t
+                  (setf mmap-fptr (make-tmp-file)
+                        mmap-fd (unix-fileno mmap-fptr))))
            (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
-                                 '(:shared) fd offset)))
+                                 '(:shared) mmap-fd offset)))
              (when (null-pointer-p ptr)
                (error (unix-strerror *error-number*)))
              (setf foreign-type ,foreign-type
                    mmap-length flen
                    mmap-ptr ptr
                    in-memory t))
-           ;; If a file is supplied and the file exists and the
-           ;; current contents are to be used, do not enlarge the
-           ;; file
-           (cond ((and filespec file-exists (not init-elem-p))
-                  (setf mmap-fd fd)
-                  vector)
-                 (t
-                  (setf mmap-fd (enlarge-file fd (1- flen)))
-                  (loop
-                     for i from 0 below length
-                     do (setf (mref vector i) initial-element)
-                     finally (return vector)))))))
+           (unless (and file-exists (not init-elem-p))
+             (setf mmap-fd (enlarge-file mmap-fd (1- flen)))
+             (loop
+                for i from 0 below length
+                do (setf (mref vector i) initial-element)))))
+       vector)
     (defmethod free-mapped-vector ((vector ,name))
       (prog1
           (munmap vector)
@@ -280,10 +289,10 @@ NEW-LENGTH bytes."
     (error (unix-strerror *error-number*)))
   fd)
 
-(defun make-tmp-fd ()
-  "Returns a Unix file descriptor for a temporary file created with
-the C tmpfile function."
+(defun make-tmp-file ()
+  "Returns a Unix file stream descriptor for a temporary file created
+with the C tmpfile function."
   (let ((file (unix-tmpfile)))
     (when (null-pointer-p file)
       (error (unix-strerror *error-number*)))
-    (unix-fileno file)))
+    file))
