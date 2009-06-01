@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-mmap)
+(in-package #:uk.co.deoxybyte-unix)
 
 (defclass mmapped-file ()
   ((filespec :initform nil
@@ -50,8 +50,7 @@
             file.")
    (mmap-ptr :initform nil
              :initarg :mmap-ptr
-             :documentation "The CFFI pointer returned by the mmap
-             foreign function.")
+             :documentation "The CFFI pointer returned by the mmap             foreign function.")
    (in-memory :initform nil
               :initarg :in-memory
               :documentation "A boolean value which is T if the file
@@ -60,38 +59,6 @@
 (defclass mapped-vector (mmapped-file)
   ()
   (:documentation "A vector backed by a mmapped file."))
-
-(define-condition mmapped-file-error (error)
-  ((text :initform nil
-         :initarg :text
-         :reader text-of
-         :documentation "Error message text.")
-   (mmapped-file :initarg :mmapped-file
-                 :reader mmapped-file-of
-                 :documentation "The mmapped file where the error occurred."))
-  (:report (lambda (condition stream)
-             (let ((mmf (mmapped-file-of condition)))
-               (format stream "mmapped file error in ~a ~a (~a)~@[: ~a~]"
-                       (filespec-of mmf) (foreign-type-of mmf)
-                       (length-of mmf)
-                       (text-of condition)))))
-  (:documentation "An error that is raised during an operation on a
-mmapped file."))
-
-(define-condition mmapped-index-error (mmapped-file-error)
-  ((index :initform nil
-          :initarg :index
-          :reader index-of
-          :documentation "The index that caused the error."))
-  (:report (lambda (condition stream)
-             (let ((mmf (mmapped-file-of condition)))
-               (format stream (txt "mmapped file error in ~a ~a (~a)"
-                                   "at index ~a~@[: ~a~]")
-                       (filespec-of mmf) (foreign-type-of mmf)
-                       (length-of mmf) (index-of condition)
-                       (text-of condition)))))
-  (:documentation "An error that is raised during an index operation
-on a mmapped file."))
 
 (defgeneric munmap (mmapped-file)
   (:documentation "Frees the mapped memory used by MMAPPED-FILE and
@@ -130,15 +97,15 @@ Key:
 Returns:
 
 - A pointer."
-  (let ((fd (unix-open (namestring filespec) '(:rdwr) #o644))
+  (let ((fd (c-open (namestring filespec) '(:rdwr) #o644))
         (flen (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
-      (error (unix-strerror *error-number*)))
-    (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
-                          protection fd offset)))
+      (error (c-strerror *error-number*)))
+    (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
+                       protection fd offset)))
       (when (null-pointer-p ptr)
-        (error (unix-strerror *error-number*)))
+        (error (c-strerror *error-number*)))
       (make-instance 'mmapped-file :length length :foreign-type foreign-type
                      :mmap-length flen
                      :mmap-fd (enlarge-file fd (1- flen))
@@ -153,16 +120,17 @@ Returns:
   (with-slots (length mmap-length mmap-fd mmap-ptr in-memory)
       obj
     (when in-memory
-      (when (= -1 (unix-munmap mmap-ptr mmap-length))
-        (error (unix-strerror *error-number*)))
-      (when (= -1 (unix-close mmap-fd))
-        (error (unix-strerror *error-number*)))
+      (when (= -1 (c-munmap mmap-ptr mmap-length))
+        (error (c-strerror *error-number*)))
+      (when (= -1 (c-close mmap-fd))
+        (error (c-strerror *error-number*)))
       t)))
 
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
   (%vector-bounds-check vector index))
 
 (defmethod (setf mref) :before (value (vector mapped-vector) (index fixnum))
+  (declare (ignore value))
   (%vector-bounds-check vector index))
 
 (defmacro define-mapped-vector (name foreign-type &optional docstring)
@@ -184,21 +152,21 @@ FOREIGN-TYPE."
                (flen (* length (foreign-type-size ,foreign-type)))
                (offset 0))
            (cond (file-exists
-                  (setf mmap-fd (unix-open (namestring filespec)
-                                           '(:rdwr) #o644)))
+                  (setf mmap-fd (c-open (namestring filespec)
+                                        '(:rdwr) #o644)))
                  (filespec
-                  (setf mmap-fd (unix-open (namestring
-                                            (ensure-file-exists filespec))
-                                           '(:rdwr) #o644)))
+                  (setf mmap-fd (c-open (namestring
+                                         (ensure-file-exists filespec))
+                                        '(:rdwr) #o644)))
                  (t
-                  (setf mmap-fd (unix-mkstemp
+                  (setf mmap-fd (c-mkstemp
                                  (copy-seq "/tmp/cl-mmap-XXXXXX")))))
            (when (= -1 mmap-fd)
-             (error (unix-strerror *error-number*)))
-           (let ((ptr (unix-mmap (null-pointer) flen '(:read :write)
-                                 '(:shared) mmap-fd offset)))
+             (error (c-strerror *error-number*)))
+           (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
+                              '(:shared) mmap-fd offset)))
              (when (null-pointer-p ptr)
-               (error (unix-strerror *error-number*)))
+               (error (c-strerror *error-number*)))
              (setf foreign-type ,foreign-type
                    mmap-length flen
                    mmap-ptr ptr
@@ -273,9 +241,8 @@ if  0 <= INDEX < LENGTH, or raises an error otherwise."
 (defun enlarge-file (fd new-length)
   "Enlarges the open file designated by Unix file descriptor FD to
 NEW-LENGTH bytes."
-  (when (= -1 (unix-lseek fd new-length :seek-set))
-    (error (unix-strerror *error-number*)))
-  (when (= -1 (unix-write fd "" 1))
-    (error (unix-strerror *error-number*)))
+  (when (= -1 (c-lseek fd new-length :seek-set))
+    (error (c-strerror *error-number*)))
+  (when (= -1 (c-write fd "" 1))
+    (error (c-strerror *error-number*)))
   fd)
-

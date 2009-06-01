@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009, Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -18,30 +18,29 @@
 (in-package :cl-user)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (when (asdf:find-system :cl-system-utilities nil)
-    (asdf:operate 'asdf:load-op :cl-system-utilities)))
+  (when (asdf:find-system :deoxybyte-systems nil)
+    (asdf:operate 'asdf:load-op :deoxybyte-systems)))
 
-(defpackage #:cl-mmap-system
-  (:use :common-lisp :asdf :cl-system-utilities))
+(defpackage #:uk.co.deoxybyte-unix-system
+  (:use :common-lisp :asdf :deoxybyte-systems))
 
-(in-package #:cl-mmap-system)
+(in-package #:uk.co.deoxybyte-unix-system)
 
-(defsystem cl-mmap
-  :name "Common Lisp mmap"
+(defsystem deoxybyte-unix
+  :name "deoxybyte-unix"
   :author "Keith James"
   :licence "GPL v3"
-  :in-order-to ((test-op (load-op :cl-mmap :cl-mmap-test)))
-  :depends-on (:cffi :cl-io-utilities)
-  :components ((:module :cl-mmap-core
+  :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
+  :depends-on (:cffi :deoxybyte-io)
+  :components ((:module :deoxybyte-unix
                         :serial t
                         :pathname "src/"
                         :components ((:file "package")
-                                     (:file "mmap-cffi")
-                                     (:file "cl-mmap")))
+                                     (:file "deoxybyte-unix-ffi")
+                                     (:file "deoxybyte-unix")))
                (:lift-test-config :lift-tests
-                                  :pathname "cl-mmap-test.config"
-                                  :target-system :cl-mmap)
+                                  :pathname "deoxybyte-unix-test.config"
+                                  :target-system :deoxybyte-unix)
                (:cldoc-config :cldoc-documentation
-                              :pathname "doc/html"
-                              :target-system :cl-mmap)))
-
+                              :pathname "doc/html/"
+                              :target-system :deoxybyte-unix)))

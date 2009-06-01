@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-8, Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package #:cl-mmap-system)
+(in-package #:uk.co.deoxybyte-unix-system)
 
-(defsystem cl-mmap-test
-  :depends-on (:cl-mmap)
-  :components ((:module :cl-mmap-test
+(defsystem deoxybyte-unix-test
+  :depends-on (:deoxybyte-unix)
+  :components ((:module :deoxybyte-unix-test
                         :serial t
                         :pathname "src/test/"
                         :components ((:file "package")
-                                     (:file "cl-mmap-test")))))
+                                     (:file "deoxybyte-unix-test")))))

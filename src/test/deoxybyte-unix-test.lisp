@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,16 +15,16 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-mmap-test)
+(in-package #:uk.co.deoxybyte-unix-test)
+
+(deftestsuite deoxybyte-unix-tests ()
+  ())
 
 (defparameter *ascii-characters* (loop
                                     for i from 32 to 126
                                     collect (code-char i)))
 
-(deftestsuite cl-mmap-tests ()
-  ())
-
-(addtest (cl-mmap-tests) mvector-char-ops
+(addtest (deoxybyte-unix-tests) mvector-char-ops
   (let ((vec (make-instance 'mapped-vector-char
                             :length (length *ascii-characters*))))
     (unwind-protect
@@ -38,7 +38,7 @@
              (ensure (equalp *ascii-characters* contents))))
       (ensure (free-mapped-vector vec)))))
 
-(addtest (cl-mmap-tests) mvector-ushort-ops
+(addtest (deoxybyte-unix-tests) mvector-ushort-ops
   (let ((vec (make-instance 'mapped-vector-ushort
                             :length (1- (expt 2 16)))))
     (unwind-protect
@@ -58,7 +58,7 @@
               do (ensure (= (mref vec i) (1+ i)))))
       (ensure (free-mapped-vector vec)))))
 
-(addtest (cl-mmap-tests) mvector-initial-element
+(addtest (deoxybyte-unix-tests) mvector-initial-element
   (let ((vec1 (make-instance 'mapped-vector-ushort :length 100))
         (vec2 (make-instance 'mapped-vector-ushort :length 100
                              :initial-element 1)))
@@ -73,7 +73,7 @@
       (ensure (free-mapped-vector vec1))
       (ensure (free-mapped-vector vec2)))))
 
-(addtest (cl-mmap-tests) mvector-bounds-check
+(addtest (deoxybyte-unix-tests) mvector-bounds-check
    (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
      (unwind-protect
           (progn

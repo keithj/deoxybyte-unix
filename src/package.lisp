@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,20 +15,42 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:cl-mmap
-  (:use #:common-lisp #:cffi :cl-gp-utilities :cl-io-utilities)
-  (:nicknames #:mmp)
+(defpackage #:uk.co.deoxybyte-unix-ffi
+  (:use #:common-lisp #:cffi)
+  (:nicknames #:deoxybyte-unix-ffi
+              #:unix-ffi)
+  (:export
+   #:c-close
+   #:c-fileno
+   #:c-lseek
+   #:c-mkstemp
+   #:c-mmap
+   #:c-munmap
+   #:c-open
+   #:c-strerror
+   #:c-write)
+  (:documentation "The deoxybyte-unix-ffi package provides utility
+  foreign functions to Unix via CFFI. This is a low-level FFI that
+  does not provide a Lisp-style layer on top of the basic Unix
+  functions."))
+
+(defpackage #:uk.co.deoxybyte-unix
+  (:use #:common-lisp #:cffi #:deoxybyte-io #:deoxybyte-unix-ffi)
+  (:nicknames
+   #:deoxybyte-unix
+   #:dxx)
   (:export
    ;; Specials
-   
-   ;; Constants
+   *error-number*
 
-   ;; Variables
+   ;; Conditions
+   #:mmapped-file-error
+   #:mmapped-index-error
 
    ;; Macros
    #:define-mapped-vector
    #:with-mapped-vector
-   
+
    ;; Functions
    #:mmap
 
@@ -53,10 +75,6 @@
    #:mapped-vector-int16
    #:mapped-vector-uint16
 
-   ;; Conditions
-   #:mmapped-file-error
-   #:mmapped-index-error
-   
    ;; Generic functions
    #:filespec-of
    #:delete-of
@@ -66,5 +84,5 @@
 
    #:mref
    #:free-mapped-vector)
-  (:documentation "This package provides a CLOS interface to Unix
-  mmapped files."))
+  (:documentation "The deoxybyte-unix package provides a Lisp style
+  interface to the low level FFI in the :deoxybyte-unix-ffi package."))

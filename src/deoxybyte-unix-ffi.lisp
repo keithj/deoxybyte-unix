@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,31 +15,32 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-mmap)
+(in-package #:uk.co.deoxybyte-unix)
 
 (defctype off-t #-x86-64 :uint32
                 #+x86-64 :uint64
-  "File offset type for seeking within a mmapped file.")
+  "Offset type.")
 
 (defctype size-t #-x86-64 :uint32
                  #+x86-64 :uint64
-  "File size for mmapped files.")
+  "Site type.")
 
-(defcvar ("errno" *error-number*) :int)
+(defcvar ("errno" *error-number*) :int
+  "Number of last error.")
 
 (defbitfield open-flags
   (:rdonly  #x0000)
-   :wronly ; #x0001
-   :rdwr   ; ...
-   :nonblock
-   :append
+  :wronly                               ; #x0001
+  :rdwr                                 ; ...
+  :nonblock
+  :append
   (:creat #x0200))
 
 (defbitfield protection-flags
   (:none #x0000)
-   :read
-   :write
-   :exec)
+  :read
+  :write
+  :exec)
 
 (defbitfield map-flags
   (:shared #x0001)
@@ -51,34 +52,21 @@
   :seek-cur
   :seek-end)
 
-(defcfun ("strerror" unix-strerror) :string
-  (errno :int))
-
-(defcfun ("mkstemp" unix-mkstemp) :int
-  (template :string))
-
-(defcfun ("fileno" unix-fileno) :int
-  (stream :pointer))
-
-(defcfun ("open" unix-open) :int
-  (path :string)
-  (flags open-flags)
-  (mode :unsigned-int))
-
-(defcfun ("close" unix-close) :int
+(defcfun ("close" c-close) :int
   (file-descriptor :int))
 
-(defcfun ("lseek" unix-lseek) :int
+(defcfun ("fileno" c-fileno) :int
+  (stream :pointer))
+
+(defcfun ("lseek" c-lseek) :int
   (file-descriptor :int)
   (offset off-t)
-  (whence seek-directive)) 
+  (whence seek-directive))
 
-(defcfun ("write" unix-write) :int
-  (file-descriptor :int)
-  (value :string)
-  (count size-t))
+(defcfun ("mkstemp" c-mkstemp) :int
+  (template :string))
 
-(defcfun ("mmap" unix-mmap) :pointer
+(defcfun ("mmap" c-mmap) :pointer
   (address :pointer)
   (length size-t)
   (protection protection-flags)
@@ -86,6 +74,19 @@
   (file-descriptor :int)
   (offset off-t))
 
-(defcfun ("munmap" unix-munmap) :int
+(defcfun ("munmap" c-munmap) :int
   (address :pointer)
   (length size-t))
+
+(defcfun ("open" c-open) :int
+  (path :string)
+  (flags open-flags)
+  (mode :unsigned-int))
+
+(defcfun ("strerror" c-strerror) :string
+  (errno :int))
+
+(defcfun ("write" c-write) :int
+  (file-descriptor :int)
+  (value :string)
+  (count size-t))

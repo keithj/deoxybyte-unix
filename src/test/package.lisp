@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2007-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:cl-mmap-test
-  (:use #:common-lisp #:cl-mmap #:lift)
-  (:documentation "cl-mmap tests.")
-  (:export #:cl-mmap-tests))
+(defpackage #:uk.co.deoxybyte-unix-test
+  (:use #:common-lisp #:uk.co.deoxybyte-unix #:lift)
+  (:documentation "deoxybyte Unix tests.")
+  (:export #:deoxybyte-unix-tests))
