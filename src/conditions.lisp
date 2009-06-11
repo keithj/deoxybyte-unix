@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package #:uk.co.deoxybyte-unix)
+(in-package :uk.co.deoxybyte-unix)
 
 (define-condition mmapped-file-error (error)
   ((text :initform nil

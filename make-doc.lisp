@@ -17,8 +17,8 @@
 
 (in-package :cl-user)
 
-(asdf:operate 'asdf:load-op :cl-system-utilities)
-(asdf:operate 'asdf:load-op :cl-mmap)
+(asdf:operate 'asdf:load-op :deoxybyte-systems)
+(asdf:operate 'asdf:load-op :deoxybyte-unix)
 
-(su:document-system :cl-mmap)
+(dxs:document-system :deoxybyte-unix)
 (quit)

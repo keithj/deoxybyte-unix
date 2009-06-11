@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package #:uk.co.deoxybyte-unix)
+(in-package :uk.co.deoxybyte-unix-ffi)
 
 (defctype off-t #-x86-64 :uint32
                 #+x86-64 :uint64

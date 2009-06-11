@@ -15,11 +15,13 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:uk.co.deoxybyte-unix-ffi
+(defpackage :uk.co.deoxybyte-unix-ffi
   (:use #:common-lisp #:cffi)
   (:nicknames #:deoxybyte-unix-ffi
               #:unix-ffi)
   (:export
+   #:*error-number*
+   #:seek-directive
    #:c-close
    #:c-fileno
    #:c-lseek
@@ -34,15 +36,12 @@
   does not provide a Lisp-style layer on top of the basic Unix
   functions."))
 
-(defpackage #:uk.co.deoxybyte-unix
+(defpackage :uk.co.deoxybyte-unix
   (:use #:common-lisp #:cffi #:deoxybyte-io #:deoxybyte-unix-ffi)
   (:nicknames
    #:deoxybyte-unix
    #:dxx)
   (:export
-   ;; Specials
-   *error-number*
-
    ;; Conditions
    #:mmapped-file-error
    #:mmapped-index-error

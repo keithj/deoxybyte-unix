@@ -12,14 +12,14 @@ all: fasl doc
 
 fasl:
 	sbcl --noinform --noprint \
-	--eval "(progn (asdf:operate 'asdf:compile-op :cl-mmap) (quit))"
+	--eval "(progn (asdf:operate 'asdf:compile-op :deoxybyte-unix) (quit))"
 
 doc:
 	sbcl --noinform --noprint --load make-doc.lisp
 
 test:
 	sbcl --noinform --noprint \
-	--eval "(progn (asdf:operate 'asdf:test-op :cl-mmap) (quit))"
+	--eval "(progn (asdf:operate 'asdf:test-op :deoxybyte-unix) (quit))"
 
 clean:
 	find . -name \*.fasl -exec rm {} \;
