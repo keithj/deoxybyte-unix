@@ -1,6 +1,8 @@
 ;;;
 ;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
+;;; This file is part of deoxybyte-unix.
+;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
 ;;; the Free Software Foundation, either version 3 of the License, or
@@ -15,7 +17,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package #:uk.co.deoxybyte-unix)
+(in-package :uk.co.deoxybyte-unix)
 
 (defclass mmapped-file ()
   ((filespec :initform nil
@@ -160,7 +162,7 @@ FOREIGN-TYPE."
                                         '(:rdwr) #o644)))
                  (t
                   (setf mmap-fd (c-mkstemp
-                                 (copy-seq "/tmp/cl-mmap-XXXXXX")))))
+                                 (copy-seq "/tmp/deoxybyte-unix-XXXXXX")))))
            (when (= -1 mmap-fd)
              (error (c-strerror *error-number*)))
            (let ((ptr (c-mmap (null-pointer) flen '(:read :write)

@@ -1,6 +1,8 @@
 ;;;
 ;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
+;;; This file is part of deoxybyte-unix.
+;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
 ;;; the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +22,7 @@
   (:nicknames #:deoxybyte-unix-ffi
               #:unix-ffi)
   (:export
-   #:*error-number*
+   #:*c-error-number*
    #:seek-directive
    #:c-close
    #:c-fileno
@@ -32,56 +34,49 @@
    #:c-strerror
    #:c-write)
   (:documentation "The deoxybyte-unix-ffi package provides utility
-  foreign functions to Unix via CFFI. This is a low-level FFI that
-  does not provide a Lisp-style layer on top of the basic Unix
-  functions."))
+foreign functions to Unix via CFFI. This is a low-level FFI that does
+not provide a Lisp-style layer on top of the basic Unix functions. A
+small subset of Unix functionality is represented, with further
+functions being added as required."))
 
 (defpackage :uk.co.deoxybyte-unix
-  (:use #:common-lisp #:cffi #:deoxybyte-io #:deoxybyte-unix-ffi)
+  (:use #:common-lisp #:cffi
+        #:deoxybyte-utilities #:deoxybyte-io #:deoxybyte-unix-ffi)
   (:nicknames
    #:deoxybyte-unix
    #:dxx)
   (:export
-   ;; Conditions
+   ;; mmap
+   #:mmap
+   #:munmap
    #:mmapped-file-error
    #:mmapped-index-error
-
-   ;; Macros
-   #:define-mapped-vector
-   #:with-mapped-vector
-
-   ;; Functions
-   #:mmap
-
-   ;; Classes
    #:mmapped-file
-   #:mapped-vector
+   #:mapped-vector   
    #:mapped-vector-char
    #:mapped-vector-uchar
-
    #:mapped-vector-short
    #:mapped-vector-ushort
-
    #:mapped-vector-int
    #:mapped-vector-uint
-
    #:mapped-vector-float
    #:mapped-vector-double
-
    #:mapped-vector-int32
    #:mapped-vector-uint32
-
    #:mapped-vector-int16
    #:mapped-vector-uint16
-
-   ;; Generic functions
    #:filespec-of
    #:delete-of
    #:length-of
    #:in-memory-p
-   #:munmap
-
    #:mref
+   #:define-mapped-vector
+   #:with-mapped-vector
    #:free-mapped-vector)
   (:documentation "The deoxybyte-unix package provides a Lisp style
-  interface to the low level FFI in the :deoxybyte-unix-ffi package."))
+interface to the low level FFI in the :deoxybyte-unix-ffi package.
+
+Some, but not all, Lisp implementations provide a POSIX or Unix
+package. While deoxybyte-unix treads some well-worn ground in that
+respect, it should be portable to all Unix platforms supported by
+CFFI."))

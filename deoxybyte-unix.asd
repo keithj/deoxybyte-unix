@@ -1,6 +1,8 @@
 ;;;
 ;;; Copyright (C) 2009 Keith James. All rights reserved.
 ;;;
+;;; This file is part of deoxybyte-unix.
+;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
 ;;; the Free Software Foundation, either version 3 of the License, or
@@ -37,6 +39,7 @@
                         :pathname "src/"
                         :components ((:file "package")
                                      (:file "deoxybyte-unix-ffi")
+                                     (:file "conditions")
                                      (:file "deoxybyte-unix")))
                (:lift-test-config :lift-tests
                                   :pathname "deoxybyte-unix-test.config"
