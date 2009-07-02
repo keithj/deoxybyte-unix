@@ -103,11 +103,11 @@ Returns:
         (flen (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
-      (error (c-strerror *error-number*)))
+      (error (c-strerror *c-error-number*)))
     (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
                        protection fd offset)))
       (when (null-pointer-p ptr)
-        (error (c-strerror *error-number*)))
+        (error (c-strerror *c-error-number*)))
       (make-instance 'mmapped-file :length length :foreign-type foreign-type
                      :mmap-length flen
                      :mmap-fd (enlarge-file fd (1- flen))
@@ -123,9 +123,9 @@ Returns:
       obj
     (when in-memory
       (when (= -1 (c-munmap mmap-ptr mmap-length))
-        (error (c-strerror *error-number*)))
+        (error (c-strerror *c-error-number*)))
       (when (= -1 (c-close mmap-fd))
-        (error (c-strerror *error-number*)))
+        (error (c-strerror *c-error-number*)))
       t)))
 
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
@@ -164,11 +164,11 @@ FOREIGN-TYPE."
                   (setf mmap-fd (c-mkstemp
                                  (copy-seq "/tmp/deoxybyte-unix-XXXXXX")))))
            (when (= -1 mmap-fd)
-             (error (c-strerror *error-number*)))
+             (error (c-strerror *c-error-number*)))
            (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
                               '(:shared) mmap-fd offset)))
              (when (null-pointer-p ptr)
-               (error (c-strerror *error-number*)))
+               (error (c-strerror *c-error-number*)))
              (setf foreign-type ,foreign-type
                    mmap-length flen
                    mmap-ptr ptr
@@ -244,7 +244,7 @@ if  0 <= INDEX < LENGTH, or raises an error otherwise."
   "Enlarges the open file designated by Unix file descriptor FD to
 NEW-LENGTH bytes."
   (when (= -1 (c-lseek fd new-length :seek-set))
-    (error (c-strerror *error-number*)))
+    (error (c-strerror *c-error-number*)))
   (when (= -1 (c-write fd "" 1))
-    (error (c-strerror *error-number*)))
+    (error (c-strerror *c-error-number*)))
   fd)

@@ -22,6 +22,8 @@
   (:nicknames #:deoxybyte-unix-ffi
               #:unix-ffi)
   (:export
+   #:off-t
+   #:size-t
    #:*c-error-number*
    #:seek-directive
    #:c-close
