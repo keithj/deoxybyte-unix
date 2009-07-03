@@ -113,6 +113,25 @@ Returns:
                      :mmap-fd (enlarge-file fd (1- flen))
                      :mmap-ptr ptr :in-memory t))))
 
+(defmethod print-object ((mmapped-file mmapped-file) stream)
+  (with-accessors ((filespec filespec-of) (foreign-type foreign-type-of)
+                   (length length-of))
+      mmapped-file
+    (with-slots ((bytes mmap-length))
+        mmapped-file
+      (format stream "#<MMAPPED-FILE ~@[~a ~]~a ~d elements, ~d bytes>"
+              filespec foreign-type length bytes))))
+
+(defmethod print-object ((mapped-vector mapped-vector) stream)
+  (with-accessors ((filespec filespec-of) (foreign-type foreign-type-of)
+                   (length length-of))
+      mapped-vector
+    (with-slots ((bytes mmap-length))
+        mapped-vector
+      (format stream "#<MAPPED-VECTOR ~@[~a ~]~a ~d elements, ~d bytes>"
+              filespec foreign-type length bytes))))
+
+
 (defmethod in-memory-p ((obj mmapped-file))
   (with-slots (in-memory)
       obj

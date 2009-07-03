@@ -28,11 +28,9 @@
                  :reader mmapped-file-of
                  :documentation "The mmapped file where the error occurred."))
   (:report (lambda (condition stream)
-             (let ((mmf (mmapped-file-of condition)))
-               (format stream "mmapped file error in ~a ~a (~a)~@[: ~a~]"
-                       (filespec-of mmf) (foreign-type-of mmf)
-                       (length-of mmf)
-                       (text-of condition)))))
+             (format stream "mmapped file error in ~a~@[: ~a~]"
+                     (mmapped-file-of condition)
+                     (text-of condition))))
   (:documentation "An error that is raised during an operation on a
 mmapped file."))
 
@@ -42,11 +40,8 @@ mmapped file."))
           :reader index-of
           :documentation "The index that caused the error."))
   (:report (lambda (condition stream)
-             (let ((mmf (mmapped-file-of condition)))
-               (format stream (txt "mmapped file error in ~a ~a (~a)"
-                                   "at index ~a~@[: ~a~]")
-                       (filespec-of mmf) (foreign-type-of mmf)
-                       (length-of mmf) (index-of condition)
-                       (text-of condition)))))
+             (format stream "mmapped file error in ~a~@[: ~a~]"
+                     (mmapped-file-of condition)
+                     (text-of condition))))
   (:documentation "An error that is raised during an index operation
 on a mmapped file."))
