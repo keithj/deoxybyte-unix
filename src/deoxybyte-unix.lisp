@@ -52,7 +52,8 @@
             file.")
    (mmap-ptr :initform nil
              :initarg :mmap-ptr
-             :documentation "The CFFI pointer returned by the mmap             foreign function.")
+             :documentation "The CFFI pointer returned by the mmap
+             foreign function.")
    (in-memory :initform nil
               :initarg :in-memory
               :documentation "A boolean value which is T if the file
@@ -205,10 +206,12 @@ FOREIGN-TYPE."
             vector
           (when (and filespec delete)
             (delete-file filespec)))))
+    ;; Allow safety 0 for reading
     (defmethod mref ((vector ,name) (index fixnum))
-      (declare (optimize (speed 3) (safety 1)))
+      (declare (optimize (speed 3) (safety 0)))
       (with-slots (length mmap-ptr) vector
         (mem-aref mmap-ptr ,foreign-type index)))
+    ;; Use safety 1 to keep the type check on SBCL
     (defmethod (setf mref) (value (vector ,name) (index fixnum))
       (declare (optimize (speed 3) (safety 1)))
       (with-slots (length mmap-ptr) vector
