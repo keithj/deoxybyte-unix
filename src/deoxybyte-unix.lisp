@@ -150,6 +150,14 @@ Returns:
         (error (c-strerror *c-error-number*)))
       t)))
 
+(defmethod free-mapped-vector ((vector mapped-vector))
+  (prog1
+      (munmap vector)
+    (with-slots (filespec delete)
+        vector
+      (when (and filespec delete)
+        (delete-file filespec)))))
+
 (defmethod mref :before ((vector mapped-vector) (index fixnum))
   (%vector-bounds-check vector index))
 
@@ -201,13 +209,6 @@ FOREIGN-TYPE."
                                              :ptr ptr
                                              :livep t)))))
        vector)
-    (defmethod free-mapped-vector ((vector ,name))
-      (prog1
-          (munmap vector)
-        (with-slots (filespec delete)
-            vector
-          (when (and filespec delete)
-            (delete-file filespec)))))
     ;; Allow safety 0 for reading
     (defmethod mref ((vector ,name) (index fixnum))
       (declare (optimize (speed 3) (safety 0)))
