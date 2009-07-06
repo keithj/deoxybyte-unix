@@ -19,13 +19,13 @@
 
 (defpackage :uk.co.deoxybyte-unix-ffi
   (:use #:common-lisp #:cffi)
-  (:nicknames #:deoxybyte-unix-ffi
-              #:unix-ffi)
+  (:nicknames #:deoxybyte-unix-ffi #:unix-ffi)
   (:export
    #:off-t
    #:size-t
    #:*c-error-number*
    #:seek-directive
+   #:sysconf-arg
    #:c-close
    #:c-fileno
    #:c-lseek
@@ -34,6 +34,7 @@
    #:c-munmap
    #:c-open
    #:c-strerror
+   #:c-sysconf
    #:c-write)
   (:documentation "The deoxybyte-unix-ffi package provides utility
 foreign functions to Unix via CFFI. This is a low-level FFI that does
@@ -45,16 +46,15 @@ functions being added as required."))
   (:use #:common-lisp #:cffi
         #:deoxybyte-utilities #:deoxybyte-io #:deoxybyte-unix-ffi)
   (:nicknames
-   #:deoxybyte-unix
-   #:dxx)
+   #:deoxybyte-unix #:dxn)
   (:export
    ;; mmap
    #:mmap
    #:munmap
-   #:mmapped-file-error
-   #:mmapped-index-error
-   #:mmapped-file
-   #:mapped-vector   
+   #:mapped-file-error
+   #:mapped-index-error
+   #:mapped-file
+   #:mapped-vector
    #:mapped-vector-char
    #:mapped-vector-uchar
    #:mapped-vector-short
@@ -67,6 +67,15 @@ functions being added as required."))
    #:mapped-vector-uint32
    #:mapped-vector-int16
    #:mapped-vector-uint16
+
+   #:mmap-area
+   #:mmap-area-fd
+   #:mmap-area-type
+   #:mmap-area-size
+   #:mmap-area-ptr
+   #:mmap-area-livep
+   #:length
+
    #:filespec-of
    #:delete-of
    #:length-of

@@ -19,7 +19,22 @@
 
 (in-package :uk.co.deoxybyte-unix)
 
-(defclass mmapped-file ()
+(defstruct mmap-area
+  "An aggregate of data used to describe an mmap operation.
+
+- fr: The mmap file descriptor.
+- type: The foreign type in the file being mmapped.
+- size: The size in bytes of the region mmapped.
+- ptr: The CFFI pointer returned by the mmap foreign function.
+- livep: A boolean value which is T if the file is currently mmapped,
+  or NIL otherwise."
+  (fd 0 :type fixnum)
+  (type :char :type symbol)
+  (size 0 :type fixnum)
+  (ptr nil)
+  (livep nil :type boolean))
+
+(defclass mapped-file ()
   ((filespec :initform nil
              :initarg :filespec
              :reader filespec-of
@@ -39,36 +54,23 @@
            :reader length-of
            :documentation "The length of the Lisp vector created when
            the file is mmapped.")
-   (foreign-type :initform :char
-                 :initarg :foreign-type
-                 :reader foreign-type-of
-                 :documentation "The foreign type of the elements to
-                 be stored in the vector.")
-   (mmap-length :initarg :mmap-length
-                :documentation "The number of bytes to be mmapped.")
-   (mmap-fd :initform nil
-            :initarg :mmap-fd
-            :documentation "The Unix file descriptor of the open
-            file.")
-   (mmap-ptr :initform nil
-             :initarg :mmap-ptr
-             :documentation "The CFFI pointer returned by the mmap
-             foreign function.")
-   (in-memory :initform nil
-              :initarg :in-memory
-              :documentation "A boolean value which is T if the file
-              is currently mmapped, or NIL otherwise.")))
+   (mmap-area :initform nil
+              :initarg :mmap-area
+              :documentation "The mmap-area. This slot symbol is
+              exported to allow direct access without method
+              dispatch. This is significantly faster, at least on
+              SBCL.")))
 
-(defclass mapped-vector (mmapped-file)
+(defclass mapped-vector (mapped-file)
   ()
-  (:documentation "A vector backed by a mmapped file."))
+  (:documentation "A vector backed by a mapped file."))
 
-(defgeneric munmap (mmapped-file)
-  (:documentation "Frees the mapped memory used by MMAPPED-FILE and
+(defgeneric munmap (mapped-file)
+  (:documentation "Frees the mapped memory used by MAPPED-FILE and
   closes the underlying file descriptor."))
 
-(defgeneric in-memory-p (mmapped-file)
-  (:documentation "Returns T if MMAPPED-FILE is mapped into memory, or
+(defgeneric in-memory-p (mapped-file)
+  (:documentation "Returns T if MAPPED-FILE is mapped into memory, or
   NIL otherwise."))
 
 (defgeneric mref (mapped-vector index)
@@ -109,42 +111,42 @@ Returns:
                        protection fd offset)))
       (when (null-pointer-p ptr)
         (error (c-strerror *c-error-number*)))
-      (make-instance 'mmapped-file :length length :foreign-type foreign-type
-                     :mmap-length flen
-                     :mmap-fd (enlarge-file fd (1- flen))
-                     :mmap-ptr ptr :in-memory t))))
+      (make-instance 'mapped-file :length length
+                     :mmap-area (make-mmap-area
+                                 :fd (enlarge-file fd (1- flen))
+                                 :type foreign-type
+                                 :size flen
+                                 :ptr ptr
+                                 :livep t)))))
 
-(defmethod print-object ((mmapped-file mmapped-file) stream)
-  (with-accessors ((filespec filespec-of) (foreign-type foreign-type-of)
-                   (length length-of))
-      mmapped-file
-    (with-slots ((bytes mmap-length))
-        mmapped-file
-      (format stream "#<MMAPPED-FILE ~@[~a ~]~a ~d elements, ~d bytes>"
-              filespec foreign-type length bytes))))
+(defmethod print-object ((mapped-file mapped-file) stream)
+  (with-accessors ((filespec filespec-of) (length length-of))
+      mapped-file
+    (with-slots ((area mmap-area))
+        mapped-file
+      (format stream "#<MAPPED-FILE ~@[~a ~]~a ~d elements, ~d bytes>"
+              filespec (mmap-area-type area) length (mmap-area-size area)))))
 
 (defmethod print-object ((mapped-vector mapped-vector) stream)
-  (with-accessors ((filespec filespec-of) (foreign-type foreign-type-of)
-                   (length length-of))
+  (with-accessors ((filespec filespec-of) (length length-of))
       mapped-vector
-    (with-slots ((bytes mmap-length))
+    (with-slots ((area mmap-area))
         mapped-vector
       (format stream "#<MAPPED-VECTOR ~@[~a ~]~a ~d elements, ~d bytes>"
-              filespec foreign-type length bytes))))
+              filespec (mmap-area-type area) length (mmap-area-size area)))))
 
-
-(defmethod in-memory-p ((obj mmapped-file))
-  (with-slots (in-memory)
+(defmethod in-memory-p ((obj mapped-file))
+  (with-slots ((area mmap-area))
       obj
-    in-memory))
+    (mmap-area-livep area)))
 
-(defmethod munmap ((obj mmapped-file))
-  (with-slots (length mmap-length mmap-fd mmap-ptr in-memory)
+(defmethod munmap ((obj mapped-file))
+  (with-slots ((area mmap-area))
       obj
-    (when in-memory
-      (when (= -1 (c-munmap mmap-ptr mmap-length))
+    (when (mmap-area-livep area)
+      (when (= -1 (c-munmap (mmap-area-ptr area) (mmap-area-size area)))
         (error (c-strerror *c-error-number*)))
-      (when (= -1 (c-close mmap-fd))
+      (when (= -1 (c-close (mmap-area-fd area)))
         (error (c-strerror *c-error-number*)))
       t)))
 
@@ -167,37 +169,37 @@ FOREIGN-TYPE."
                                     foreign-type))))
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
-       (with-slots (filespec length mmap-length foreign-type
-                             mmap-fd mmap-ptr in-memory)
+       (with-slots (filespec length mmap-area)
            vector
-         (let ((file-exists (and filespec (probe-file filespec)))
-               (flen (* length (foreign-type-size ,foreign-type)))
-               (offset 0))
-           (cond (file-exists
-                  (setf mmap-fd (c-open (namestring filespec)
-                                        '(:rdwr) #o644)))
-                 (filespec
-                  (setf mmap-fd (c-open (namestring
-                                         (ensure-file-exists filespec))
-                                        '(:rdwr) #o644)))
-                 (t
-                  (setf mmap-fd (c-mkstemp
-                                 (copy-seq "/tmp/deoxybyte-unix-XXXXXX")))))
-           (when (= -1 mmap-fd)
+         (let* ((file-exists (and filespec (probe-file filespec)))
+                (fsize (* length (foreign-type-size ,foreign-type)))
+                (offset 0)
+                (fd (cond (file-exists
+                           (c-open (namestring filespec)
+                                   '(:rdwr) #o644))
+                          (filespec
+                           (c-open (namestring
+                                    (ensure-file-exists filespec))
+                                   '(:rdwr) #o644))
+                          (t
+                           (c-mkstemp
+                            (copy-seq "/tmp/deoxybyte-unix-XXXXXX"))))))
+           (when (= -1 fd)
              (error (c-strerror *c-error-number*)))
-           (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
-                              '(:shared) mmap-fd offset)))
+           (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
+                              '(:shared) fd offset)))
              (when (null-pointer-p ptr)
                (error (c-strerror *c-error-number*)))
-             (setf foreign-type ,foreign-type
-                   mmap-length flen
-                   mmap-ptr ptr
-                   in-memory t))
-           (unless (and file-exists (not init-elem-p))
-             (setf mmap-fd (enlarge-file mmap-fd (1- flen)))
-             (loop
-                for i from 0 below length
-                do (setf (mref vector i) initial-element)))))
+             (unless (and file-exists (not init-elem-p))
+               (enlarge-file fd (1- fsize))
+               (loop
+                  for i from 0 below length
+                  do (setf (mem-aref ptr ,foreign-type i) initial-element)))
+             (setf mmap-area (make-mmap-area :fd fd
+                                             :type ,foreign-type
+                                             :size fsize
+                                             :ptr ptr
+                                             :livep t)))))
        vector)
     (defmethod free-mapped-vector ((vector ,name))
       (prog1
@@ -209,14 +211,16 @@ FOREIGN-TYPE."
     ;; Allow safety 0 for reading
     (defmethod mref ((vector ,name) (index fixnum))
       (declare (optimize (speed 3) (safety 0)))
-      (with-slots (length mmap-ptr) vector
-        (mem-aref mmap-ptr ,foreign-type index)))
+      (with-slots ((area mmap-area))
+          vector
+        (mem-aref (mmap-area-ptr area) ,foreign-type index)))
     ;; Use safety 1 to keep the type check on SBCL
     (defmethod (setf mref) (value (vector ,name) (index fixnum))
       (declare (optimize (speed 3) (safety 1)))
-      (with-slots (length mmap-ptr) vector
-        (declare (type fixnum length index))
-        (setf (mem-aref mmap-ptr ,foreign-type index) value)))))
+      (with-slots ((area mmap-area))
+          vector
+        (declare (type fixnum index))
+        (setf (mem-aref (mmap-area-ptr area) ,foreign-type index) value)))))
 
 (define-mapped-vector mapped-vector-char :char)
 (define-mapped-vector mapped-vector-uchar :unsigned-char)
@@ -252,12 +256,12 @@ is safely munmapped after use."
   "Performs a bounds check on INDEX with respect to LENGTH. Returns T
 if  0 <= INDEX < LENGTH, or raises an error otherwise."
   (declare (optimize (speed 3)))
-  (with-accessors ((length length-of))
+  (with-slots (length)
       vector
     (declare (type fixnum index length))
     (unless (< -1 index length)
-      (error 'mmapped-index-error
-             :mmapped-file vector
+      (error 'mapped-index-error
+             :mapped-file vector
              :index index
              :text "index out of bounds")))
   t)

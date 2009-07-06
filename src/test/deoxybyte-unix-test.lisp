@@ -91,14 +91,14 @@
               (setf (mref vec 100) 99)))
        (ensure (free-mapped-vector vec)))))
 
-(addtest (deoxybyte-unix-tests) mmapped-index-error/1
+(addtest (deoxybyte-unix-tests) mapped-index-error/1
   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
     (unwind-protect
          (progn
            (ensure (zerop (mref vec 0)))
            (ensure (zerop (mref vec 99)))
-           (ensure-condition mmapped-file-error
+           (ensure-condition mapped-file-error
              (mref vec -1))
-           (ensure-condition mmapped-index-error
+           (ensure-condition mapped-index-error
              (mref vec 100)))
       (ensure (free-mapped-vector vec)))))

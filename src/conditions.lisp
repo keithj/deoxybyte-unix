@@ -19,29 +19,27 @@
 
 (in-package :uk.co.deoxybyte-unix)
 
-(define-condition mmapped-file-error (error)
+(define-condition mapped-file-error (error)
   ((text :initform nil
          :initarg :text
          :reader text-of
          :documentation "Error message text.")
-   (mmapped-file :initarg :mmapped-file
-                 :reader mmapped-file-of
-                 :documentation "The mmapped file where the error occurred."))
+   (mapped-file :initarg :mmapped-file
+                :reader mapped-file-of
+                :documentation "The mmapped file where the error occurred."))
   (:report (lambda (condition stream)
-             (format stream "mmapped file error in ~a~@[: ~a~]"
-                     (mmapped-file-of condition)
-                     (text-of condition))))
+             (format stream "mmap error in ~a~@[: ~a~]"
+                     (mapped-file-of condition) (text-of condition))))
   (:documentation "An error that is raised during an operation on a
 mmapped file."))
 
-(define-condition mmapped-index-error (mmapped-file-error)
+(define-condition mapped-index-error (mapped-file-error)
   ((index :initform nil
           :initarg :index
           :reader index-of
           :documentation "The index that caused the error."))
   (:report (lambda (condition stream)
-             (format stream "mmapped file error in ~a~@[: ~a~]"
-                     (mmapped-file-of condition)
-                     (text-of condition))))
+             (format stream "mmap error in ~a~@[: ~a~]"
+                     (mapped-file-of condition) (text-of condition))))
   (:documentation "An error that is raised during an index operation
 on a mmapped file."))
