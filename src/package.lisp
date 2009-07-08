@@ -73,7 +73,7 @@ functions being added as required."))
    #:mmap-area-type
    #:mmap-area-size
    #:mmap-area-ptr
-   #:mmap-area-livep
+   #:mmap-area-live-p
    #:length
 
    #:filespec-of

@@ -32,7 +32,7 @@
   (type :char :type symbol)
   (size 0 :type fixnum)
   (ptr nil)
-  (livep nil :type boolean))
+  (live-p nil :type boolean))
 
 (defclass mapped-file ()
   ((filespec :initform nil
@@ -117,7 +117,7 @@ Returns:
                                  :type foreign-type
                                  :size flen
                                  :ptr ptr
-                                 :livep t)))))
+                                 :live-p t)))))
 
 (defmethod print-object ((mapped-file mapped-file) stream)
   (with-accessors ((filespec filespec-of) (length length-of))
@@ -138,12 +138,12 @@ Returns:
 (defmethod in-memory-p ((obj mapped-file))
   (with-slots ((area mmap-area))
       obj
-    (mmap-area-livep area)))
+    (mmap-area-live-p area)))
 
 (defmethod munmap ((obj mapped-file))
   (with-slots ((area mmap-area))
       obj
-    (when (mmap-area-livep area)
+    (when (mmap-area-live-p area)
       (when (= -1 (c-munmap (mmap-area-ptr area) (mmap-area-size area)))
         (error (c-strerror *c-error-number*)))
       (when (= -1 (c-close (mmap-area-fd area)))
@@ -207,7 +207,7 @@ FOREIGN-TYPE."
                                              :type ,foreign-type
                                              :size fsize
                                              :ptr ptr
-                                             :livep t)))))
+                                             :live-p t)))))
        vector)
     ;; Allow safety 0 for reading
     (defmethod mref ((vector ,name) (index fixnum))
