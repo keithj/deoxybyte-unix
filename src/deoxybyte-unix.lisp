@@ -148,6 +148,7 @@ Returns:
         (error (c-strerror *c-error-number*)))
       (when (= -1 (c-close (mmap-area-fd area)))
         (error (c-strerror *c-error-number*)))
+      (setf (mmap-area-live-p area) nil)
       t)))
 
 (defmethod free-mapped-vector ((vector mapped-vector))
