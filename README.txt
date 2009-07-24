@@ -50,3 +50,9 @@ deoxybyte-utilities     git://github.com/keithj/deoxybyte-utilities.git
 deoxybyte-io            git://github.com/keithj/deoxybyte-io.git
 
 CFFI                    http://common-lisp.net/project/cffi/
+
+
+Optional dependencies
+
+LIFT                    http://common-lisp.net/project/lift/
+CLDOC                   http://common-lisp.net/project/cldoc/

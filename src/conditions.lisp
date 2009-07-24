@@ -24,9 +24,9 @@
          :initarg :text
          :reader text-of
          :documentation "Error message text.")
-   (mapped-file :initarg :mmapped-file
+   (mapped-file :initarg :mapped-file
                 :reader mapped-file-of
-                :documentation "The mmapped file where the error occurred."))
+                :documentation "The mapped file where the error occurred."))
   (:report (lambda (condition stream)
              (format stream "mmap error in ~a~@[: ~a~]"
                      (mapped-file-of condition) (text-of condition))))

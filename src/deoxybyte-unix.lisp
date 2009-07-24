@@ -168,13 +168,13 @@ Returns:
 
 (defmacro define-mapped-vector (name foreign-type &optional docstring)
   "Defines a mapped vector class NAME, with accompanying accessor
-methods \( {defmethod mref} \), specialized to store elements of
+methods ( {defmethod mref} ), specialized to store elements of
 FOREIGN-TYPE."
   `(progn
      (defclass ,name (mapped-vector)
        ()
        (:documentation ,(or docstring
-                            (format nil "A mmapped vector of ~a."
+                            (format nil "A mapped vector of ~a."
                                     foreign-type))))
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
