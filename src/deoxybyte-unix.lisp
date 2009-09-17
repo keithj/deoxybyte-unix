@@ -192,7 +192,7 @@ FOREIGN-TYPE."
                                    '(:rdwr) #o644))
                           (t
                            (c-mkstemp
-                            (copy-seq "/tmp/deoxybyte-unix-XXXXXX"))))))
+                            (copy-seq (unix-tmpfile-template)))))))
            (when (= -1 fd)
              (error (c-strerror *c-error-number*)))
            (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
@@ -276,3 +276,10 @@ NEW-LENGTH bytes."
   (when (= -1 (c-write fd "" 1))
     (error (c-strerror *c-error-number*)))
   fd)
+
+(defun unix-tmpfile-template ()
+  "Returns a new temporary file template string suitable for the C
+mkstemp function. The template is merged with
+*default-tmpfile-defaults* to supply the directory component."
+  (namestring (merge-pathnames (make-pathname :name "deoxybyte-unix-XXXXXX")
+                               *default-tmpfile-defaults*)))
