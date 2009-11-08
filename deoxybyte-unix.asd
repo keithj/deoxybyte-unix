@@ -31,12 +31,12 @@
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
-  :version "0.6.2"
+  :version "0.6.3"
   :author "Keith James"
   :licence "GPL v3"
   :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
   :depends-on ((:version :cffi "0.10.3")
-               (:version :deoxybyte-io "0.5.1"))
+               (:version :deoxybyte-io "0.5.3"))
   :components ((:module :deoxybyte-unix
                         :serial t
                         :pathname "src/"

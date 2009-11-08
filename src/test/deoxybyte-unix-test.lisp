@@ -102,3 +102,10 @@
            (ensure-condition mapped-index-error
              (mref vec 100)))
       (ensure (free-mapped-vector vec)))))
+
+(addtest (deoxybyte-unix-tests) mapped-type-error/1
+  (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
+    (unwind-protect
+         (ensure-condition type-error
+           (setf (mref vec 0) (expt 2 16)))
+      (ensure (free-mapped-vector vec)))))

@@ -102,7 +102,7 @@ Key:
 Returns:
 
 - A pointer."
-  (let ((fd (c-open (namestring filespec) '(:rdwr) #o644))
+  (let ((fd (c-open (pathstring filespec) '(:rdwr) #o644))
         (flen (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
@@ -184,10 +184,10 @@ FOREIGN-TYPE."
                 (fsize (* length (foreign-type-size ,foreign-type)))
                 (offset 0)
                 (fd (cond (file-exists
-                           (c-open (namestring filespec)
+                           (c-open (pathstring filespec)
                                    '(:rdwr) #o644))
                           (filespec
-                           (c-open (namestring
+                           (c-open (pathstring
                                     (ensure-file-exists filespec))
                                    '(:rdwr) #o644))
                           (t
@@ -281,5 +281,5 @@ NEW-LENGTH bytes."
   "Returns a new temporary file template string suitable for the C
 mkstemp function. The template is merged with
 *default-tmpfile-defaults* to supply the directory component."
-  (namestring (merge-pathnames (make-pathname :name "deoxybyte-unix-XXXXXX")
+  (pathstring (merge-pathnames (make-pathname :name "deoxybyte-unix-XXXXXX")
                                *default-tmpfile-defaults*)))
