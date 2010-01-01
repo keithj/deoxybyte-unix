@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009-2010 Keith James. All rights reserved.
 ;;;
 ;;; This file is part of deoxybyte-unix.
 ;;;
@@ -41,8 +41,7 @@
       (ensure (free-mapped-vector vec)))))
 
 (addtest (deoxybyte-unix-tests) mvector-ushort-ops/1
-  (let ((vec (make-instance 'mapped-vector-ushort
-                            :length (1- (expt 2 16)))))
+  (let ((vec (make-instance 'mapped-vector-ushort :length (1- (expt 2 16)))))
     (unwind-protect
          (progn
            (loop

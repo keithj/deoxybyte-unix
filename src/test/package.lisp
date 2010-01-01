@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2009 Keith James. All rights reserved.
+;;; Copyright (C) 2009-2010 Keith James. All rights reserved.
 ;;;
 ;;; This file is part of deoxybyte-unix.
 ;;;
@@ -19,5 +19,5 @@
 
 (defpackage :uk.co.deoxybyte-unix-test
   (:use #:common-lisp #:deoxybyte-unix #:lift)
-  (:documentation "deoxybyte Unix tests.")
+  (:documentation "Deoxybyte Unix tests.")
   (:export #:deoxybyte-unix-tests))
