@@ -20,7 +20,8 @@
 (in-package :uk.co.deoxybyte-unix-system)
 
 (defsystem deoxybyte-unix-test
-  :depends-on (:deoxybyte-unix)
+  :depends-on ((:version :lift "1.7.0")
+               :deoxybyte-unix)
   :components ((:module :deoxybyte-unix-test
                         :serial t
                         :pathname "src/test/"
