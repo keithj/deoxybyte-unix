@@ -102,6 +102,7 @@
              (mref vec 100)))
       (ensure (free-mapped-vector vec)))))
 
+;; FIXME -- sbcl specific
 (addtest (deoxybyte-unix-tests) mapped-type-error/1
   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
     (unwind-protect

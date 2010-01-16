@@ -120,20 +120,22 @@ Returns:
                                  :live-p t)))))
 
 (defmethod print-object ((mapped-file mapped-file) stream)
-  (with-accessors ((filespec filespec-of) (length length-of))
-      mapped-file
-    (with-slots ((area mmap-area))
+  (print-unreadable-object (mapped-file stream :type t :identity t)
+    (with-accessors ((filespec filespec-of) (length length-of))
         mapped-file
-      (format stream "#<MAPPED-FILE ~@[~a ~]~a ~d elements, ~d bytes>"
-              filespec (mmap-area-type area) length (mmap-area-size area)))))
+      (with-slots ((area mmap-area))
+          mapped-file
+        (format stream "~@[~a ~]~a ~d elements, ~d bytes"
+                filespec (mmap-area-type area) length (mmap-area-size area))))))
 
 (defmethod print-object ((mapped-vector mapped-vector) stream)
-  (with-accessors ((filespec filespec-of) (length length-of))
-      mapped-vector
-    (with-slots ((area mmap-area))
+  (print-unreadable-object (mapped-vector stream :type t :identity t)
+    (with-accessors ((filespec filespec-of) (length length-of))
         mapped-vector
-      (format stream "#<MAPPED-VECTOR ~@[~a ~]~a ~d elements, ~d bytes>"
-              filespec (mmap-area-type area) length (mmap-area-size area)))))
+      (with-slots ((area mmap-area))
+          mapped-vector
+        (format stream "~@[~a ~]~a ~d elements, ~d bytes" filespec
+                (mmap-area-type area) length (mmap-area-size area))))))
 
 (defmethod in-memory-p ((obj mapped-file))
   (with-slots ((area mmap-area))
