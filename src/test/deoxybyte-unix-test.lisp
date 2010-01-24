@@ -26,6 +26,24 @@
                                     for i from 32 to 126
                                     collect (code-char i)))
 
+(addtest (deoxybyte-unix-tests) mmap-wild-error/1
+  (let ((wild-path "/tmp/*"))
+    (ensure (wild-pathname-p wild-path))
+    (ensure-condition invalid-argument-error
+      (mmap wild-path))))
+
+(addtest (deoxybyte-unix-tests) mmap-zero-length-error/1
+  (ensure-condition 'invalid-argument-error
+    (mmap "/tmp/dummy" :length 0))
+  (ensure-condition 'invalid-argument-error
+    (mmap "/tmp/dummy" :length -1)))
+
+(addtest (deoxybyte-unix-tests) mvector-zero-length-error/1
+  (ensure-condition invalid-argument-error
+    (make-instance 'mapped-vector-ushort :length 0))
+  (ensure-condition invalid-argument-error
+    (make-instance 'mapped-vector-ushort :length -1)))
+
 (addtest (deoxybyte-unix-tests) mvector-char-ops/1
   (let ((vec (make-instance 'mapped-vector-char
                             :length (length *ascii-characters*))))
@@ -75,20 +93,20 @@
       (ensure (free-mapped-vector vec2)))))
 
 (addtest (deoxybyte-unix-tests) mvector-bounds-check/1
-   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
-     (unwind-protect
-          (progn
-            (ensure (zerop (mref vec 0)))
-            (ensure (zerop (mref vec 99)))
-            (ensure-error
-              (mref vec -1))
-            (ensure-error
-              (mref vec 100))
-            (ensure-error
-              (setf (mref vec -1) 99))
-            (ensure-error
-              (setf (mref vec 100) 99)))
-       (ensure (free-mapped-vector vec)))))
+  (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
+    (unwind-protect
+         (progn
+           (ensure (zerop (mref vec 0)))
+           (ensure (zerop (mref vec 99)))
+           (ensure-error
+             (mref vec -1))
+           (ensure-error
+             (mref vec 100))
+           (ensure-error
+             (setf (mref vec -1) 99))
+           (ensure-error
+             (setf (mref vec 100) 99)))
+      (ensure (free-mapped-vector vec)))))
 
 (addtest (deoxybyte-unix-tests) mapped-index-error/1
   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
@@ -102,7 +120,7 @@
              (mref vec 100)))
       (ensure (free-mapped-vector vec)))))
 
-;; FIXME -- sbcl specific
+#+:sbcl
 (addtest (deoxybyte-unix-tests) mapped-type-error/1
   (let ((vec (make-instance 'mapped-vector-ushort :length 100)))
     (unwind-protect

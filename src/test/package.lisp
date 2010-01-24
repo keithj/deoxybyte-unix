@@ -20,4 +20,5 @@
 (defpackage :uk.co.deoxybyte-unix-test
   (:use #:common-lisp #:deoxybyte-unix #:lift)
   (:documentation "Deoxybyte Unix tests.")
+  (:import-from #:deoxybyte-utilities #:invalid-argument-error)
   (:export #:deoxybyte-unix-tests))

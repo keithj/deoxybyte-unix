@@ -159,7 +159,7 @@
   (whence seek-directive))
 
 (defcfun ("mkstemp" c-mkstemp) :int
-  (template :string))
+  (template :pointer))
 
 (defcfun ("mmap" c-mmap) :pointer
   (address :pointer)

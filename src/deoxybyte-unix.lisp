@@ -48,7 +48,7 @@
            designated in the FILESPEC slot is to be deleted
            automatically when the mmapped file is freed. If an
            automatically generated tmp is to be used, the value of
-           this slot is ignored.")
+           this slot is set to T.")
    (length :initform (error "A length argument is required.")
            :initarg :length
            :reader length-of
@@ -102,20 +102,24 @@ Key:
 Returns:
 
 - A pointer."
+  (check-arguments (not (wild-pathname-p filespec)) (filespec)
+                   "must be a non-wild path")
+  (check-arguments (and (integerp length) (plusp length)) (length)
+                   "must be a positive integer")
   (let ((fd (c-open (pathstring filespec) '(:rdwr) #o644))
-        (flen (* length (foreign-type-size foreign-type)))
+        (fsize (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
       (error (c-strerror *c-error-number*)))
-    (let ((ptr (c-mmap (null-pointer) flen '(:read :write)
+    (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
                        protection fd offset)))
       (when (null-pointer-p ptr)
         (error (c-strerror *c-error-number*)))
       (make-instance 'mapped-file :length length
                      :mmap-area (make-mmap-area
-                                 :fd (enlarge-file fd (1- flen))
+                                 :fd (enlarge-file fd fsize)
                                  :type foreign-type
-                                 :size flen
+                                 :size fsize
                                  :ptr ptr
                                  :live-p t)))))
 
@@ -180,8 +184,10 @@ FOREIGN-TYPE."
                                     foreign-type))))
      (defmethod initialize-instance :after ((vector ,name) &key
                                             (initial-element 0 init-elem-p))
-       (with-slots (filespec length mmap-area)
+       (with-slots (filespec delete length mmap-area)
            vector
+         (check-arguments (and (integerp length) (plusp length)) (length)
+                          "must be a positive integer")
          (let* ((file-exists (and filespec (probe-file filespec)))
                 (fsize (* length (foreign-type-size ,foreign-type)))
                 (offset 0)
@@ -193,8 +199,11 @@ FOREIGN-TYPE."
                                     (ensure-file-exists filespec))
                                    '(:rdwr) #o644))
                           (t
-                           (c-mkstemp
-                            (copy-seq (unix-tmpfile-template)))))))
+                           (with-foreign-string (s (unix-tmpfile-template))
+                             (prog1
+                                 (c-mkstemp s)
+                               (setf filespec (foreign-string-to-lisp s)
+                                     delete t)))))))
            (when (= -1 fd)
              (error (c-strerror *c-error-number*)))
            (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
@@ -202,7 +211,7 @@ FOREIGN-TYPE."
              (when (null-pointer-p ptr)
                (error (c-strerror *c-error-number*)))
              (unless (and file-exists (not init-elem-p))
-               (enlarge-file fd (1- fsize))
+               (enlarge-file fd fsize)
                (loop
                   for i from 0 below length
                   do (setf (mem-aref ptr ,foreign-type i) initial-element)))
@@ -270,10 +279,10 @@ if  0 <= INDEX < LENGTH, or raises an error otherwise."
              :text "index out of bounds")))
   t)
 
-(defun enlarge-file (fd new-length)
+(defun enlarge-file (fd fsize)
   "Enlarges the open file designated by Unix file descriptor FD to
-NEW-LENGTH bytes."
-  (when (= -1 (c-lseek fd new-length :seek-set))
+FSIZE bytes."
+  (when (= -1 (c-lseek fd fsize :seek-set))
     (error (c-strerror *c-error-number*)))
   (when (= -1 (c-write fd "" 1))
     (error (c-strerror *c-error-number*)))

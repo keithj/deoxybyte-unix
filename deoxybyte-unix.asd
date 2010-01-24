@@ -31,7 +31,7 @@
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
-  :version "0.6.3"
+  :version "0.6.4"
   :author "Keith James"
   :licence "GPL v3"
   :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
