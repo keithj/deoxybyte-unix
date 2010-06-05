@@ -17,13 +17,11 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :uk.co.deoxybyte-unix-system)
-
 (defsystem deoxybyte-unix-test
   :depends-on ((:version :lift "1.7.0")
                :deoxybyte-unix)
   :components ((:module :deoxybyte-unix-test
                         :serial t
-                        :pathname "src/test/"
+                        :pathname "test/"
                         :components ((:file "package")
                                      (:file "deoxybyte-unix-test")))))

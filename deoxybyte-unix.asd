@@ -19,15 +19,9 @@
 
 (in-package :cl-user)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (when (asdf:find-system :deoxybyte-systems nil)
-    (asdf:operate 'asdf:load-op :deoxybyte-systems)))
+(asdf:load-system :deoxybyte-systems)
 
-(defpackage :uk.co.deoxybyte-unix-system
-  (:use :common-lisp :asdf)
-  (:import-from :deoxybyte-systems :lift-test-config :cldoc-config))
-
-(in-package :uk.co.deoxybyte-unix-system)
+(in-package :uk.co.deoxybyte-systems)
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
@@ -45,7 +39,7 @@
                                      (:file "conditions")
                                      (:file "deoxybyte-unix")))
                (:lift-test-config :lift-tests
-                                  :pathname "deoxybyte-unix-test.config"
+                                  :pathname "deoxybyte-unix-test"
                                   :target-system :deoxybyte-unix)
                (:cldoc-config :cldoc-documentation
                               :pathname "doc/html/"
