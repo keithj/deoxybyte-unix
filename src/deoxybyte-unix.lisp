@@ -110,11 +110,13 @@ Returns:
         (fsize (* length (foreign-type-size foreign-type)))
         (offset 0))
     (when (= -1 fd)
-      (error (c-strerror *c-error-number*)))
+      (error 'mapped-file-error :mapped-file filespec
+             :text (c-strerror *c-error-number*)))
     (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
                        protection fd offset)))
       (when (null-pointer-p ptr)
-        (error (c-strerror *c-error-number*)))
+        (error 'mapped-file-error :mapped-file filespec
+               :text (c-strerror *c-error-number*)))
       (make-instance 'mapped-file :length length
                      :mmap-area (make-mmap-area
                                  :fd (enlarge-file fd fsize)
@@ -151,9 +153,11 @@ Returns:
       obj
     (when (mmap-area-live-p area)
       (when (= -1 (c-munmap (mmap-area-ptr area) (mmap-area-size area)))
-        (error (c-strerror *c-error-number*)))
+        (error 'mapped-file-error :mapped-file (filespec-of obj)
+               :text (c-strerror *c-error-number*)))
       (when (= -1 (c-close (mmap-area-fd area)))
-        (error (c-strerror *c-error-number*)))
+        (error 'mapped-file-error :mapped-file (filespec-of obj)
+               :text (c-strerror *c-error-number*)))
       (setf (mmap-area-live-p area) nil)
       t)))
 
@@ -205,11 +209,13 @@ FOREIGN-TYPE."
                                (setf filespec (foreign-string-to-lisp s)
                                      delete t)))))))
            (when (= -1 fd)
-             (error (c-strerror *c-error-number*)))
+             (error 'mapped-file-error :mapped-file filespec
+                    :text (c-strerror *c-error-number*)))
            (let ((ptr (c-mmap (null-pointer) fsize '(:read :write)
                               '(:shared) fd offset)))
              (when (null-pointer-p ptr)
-               (error (c-strerror *c-error-number*)))
+               (error 'mapped-file-error :mapped-file filespec
+                      :text (c-strerror *c-error-number*)))
              (unless (and file-exists (not init-elem-p))
                (enlarge-file fd fsize)
                (loop
@@ -273,9 +279,7 @@ if  0 <= INDEX < LENGTH, or raises an error otherwise."
       vector
     (declare (type fixnum index length))
     (unless (< -1 index length)
-      (error 'mapped-index-error
-             :mapped-file vector
-             :index index
+      (error 'mapped-index-error :mapped-file vector :index index
              :text "index out of bounds")))
   t)
 
