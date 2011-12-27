@@ -25,7 +25,7 @@
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
-  :version "0.6.5"
+  :version "0.7.0"
   :author "Keith James"
   :licence "GPL v3"
   :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
@@ -37,7 +37,8 @@
                         :components ((:file "package")
                                      (:file "deoxybyte-unix-ffi")
                                      (:file "conditions")
-                                     (:file "deoxybyte-unix")))
+                                     (:file "deoxybyte-unix")
+                                     (:file "memory-map")))
                (:lift-test-config :lift-tests
                                   :pathname "deoxybyte-unix-test"
                                   :target-system :deoxybyte-unix)

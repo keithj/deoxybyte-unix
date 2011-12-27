@@ -21,4 +21,5 @@
   (:use #:common-lisp #:deoxybyte-unix #:lift)
   (:documentation "Deoxybyte Unix tests.")
   (:import-from #:deoxybyte-utilities #:invalid-argument-error)
+  (:import-from #:deoxybyte-io #:with-tmp-pathname)
   (:export #:deoxybyte-unix-tests))

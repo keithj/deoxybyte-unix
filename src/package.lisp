@@ -48,7 +48,11 @@ functions being added as required."))
   (:nicknames
    #:deoxybyte-unix #:dxn)
   (:export
-   ;; mmap
+   ;; streams and file descriptors
+   #:file-descriptor
+   #:maybe-standard-stream
+
+   ;; memory map
    #:mmap
    #:munmap
    #:mapped-file-error
@@ -77,7 +81,7 @@ functions being added as required."))
    #:length
 
    #:filespec-of
-   #:delete-of
+   #:delete-policy-of
    #:length-of
    #:in-memory-p
    #:mref

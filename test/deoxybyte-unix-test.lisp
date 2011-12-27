@@ -26,6 +26,22 @@
                                     for i from 32 to 126
                                     collect (code-char i)))
 
+(addtest (deoxybyte-unix-tests) file-descriptor/1
+  (with-tmp-pathname (tmpfile)
+    (with-open-file (stream tmpfile :direction :output)
+      (ensure (integerp (file-descriptor stream))))))
+
+(addtest (deoxybyte-unix-tests) maybe-standard-stream/1
+  (ensure (equal "foo" (maybe-standard-stream "foo"))))
+
+(addtest (deoxybyte-unix-tests) maybe-standard-stream/2
+  (ensure (equal #P"foo" (maybe-standard-stream #P"foo"))))
+
+(addtest (deoxybyte-unix-tests) maybe-standard-stream/2
+  (ensure (equal *standard-input* (maybe-standard-stream "stdin")))
+  (ensure (equal *standard-output* (maybe-standard-stream "stdout")))
+  (ensure (equal *error-output* (maybe-standard-stream "stderr"))))
+
 (addtest (deoxybyte-unix-tests) mmap-wild-error/1
   (let ((wild-path "/tmp/*"))
     (ensure (wild-pathname-p wild-path))
