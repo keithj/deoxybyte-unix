@@ -23,41 +23,20 @@
   "Returns a standard stream (*standard-input* *standard-output* or
 *error-output*) if DESIGNATOR is a string that is STRING-EQUAL to one
 of \"stdin\", \"stdout\" or \"stderr\", otherwise returns
-DESIGNATOR. This function is useful where one of these strings may be
-given on a command line to indicate a system stream, rather than a
-file-stream is to be used."
+DESIGNATOR. (Also works for \"/dev/stdin\" etc.) This function is
+useful where one of these strings may be given on a command line to
+indicate a system stream, rather than a file-stream is to be used."
   (etypecase designator
     (stream designator)
     (pathname designator)
-    (string (cond ((string-equal "stdin" designator)
+    (string (cond ((or (string-equal "/dev/stdin" designator)
+                       (string-equal "stdin" designator))
                    *standard-input*)
-                  ((string-equal "stdout" designator)
+                  ((or (string-equal "/dev/stdout" designator)
+                       (string-equal "stdout" designator))
                    *standard-output*)
-                  ((string-equal "stderr" designator)
+                  ((or (string-equal "/dev/stderr" designator)
+                       (string-equal "stderr" designator))
                    *error-output*)
                   (t
                    designator)))))
-
-#+:sbcl
-(defun file-descriptor (stream &optional direction)
-  "Returns the Unix file descriptor associated with STREAM."
-  (declare (ignore direction))
-  (sb-posix:file-descriptor stream))
-
-#+:ccl
-(defun file-descriptor (stream &optional direction)
-  "Returns the Unix file descriptor associated with STREAM."
-  (cond (direction
-         (ccl:stream-device stream direction))
-        ((and (input-stream-p stream) (not (output-stream-p stream)))
-         (ccl:stream-device stream :input))
-        ((and (output-stream-p stream) (not (input-stream-p stream)))
-         (ccl:stream-device stream :output))
-        (t
-         (check-arguments nil (direction) "no direction was specified"))))
-
-#-(or :sbcl :ccl)
-(defun file-descriptor (stream &optional direction)
-  (declare (ignore stream direction))
-  (error "FILE-DESCRIPTOR not supported on this implementation."))
-

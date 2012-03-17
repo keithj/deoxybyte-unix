@@ -25,7 +25,7 @@
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
-  :version "0.7.0"
+  :version "0.7.1"
   :author "Keith James"
   :licence "GPL v3"
   :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
@@ -38,7 +38,10 @@
                                      (:file "deoxybyte-unix-ffi")
                                      (:file "conditions")
                                      (:file "deoxybyte-unix")
-                                     (:file "memory-map")))
+                                     (:file "memory-map")
+                                     #+:sbcl (:file "sbcl")
+                                     #+:ccl (:file "ccl")
+                                     #-(or :sbcl :ccl) (:file "default")))
                (:lift-test-config :lift-tests
                                   :pathname "deoxybyte-unix-test"
                                   :target-system :deoxybyte-unix)
