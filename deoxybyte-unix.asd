@@ -25,12 +25,14 @@
 
 (defsystem deoxybyte-unix
   :name "deoxybyte-unix"
-  :version "0.7.2"
+  :version "0.8.0"
   :author "Keith James"
   :licence "GPL v3"
-  :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test)))
-  :depends-on (:cffi                    ; (:version :cffi "0.10.3")
-               (:version :deoxybyte-io "0.6.2"))
+  :in-order-to ((test-op (load-op :deoxybyte-unix :deoxybyte-unix-test))
+                (doc-op (load-op :deoxybyte-unix :cldoc)))
+  :depends-on ((:version :deoxybyte-systems "1.0.0")
+               :cffi                    ; (:version :cffi "0.10.3")
+               (:version :deoxybyte-io "0.15.0"))
   :components ((:module :deoxybyte-unix
                         :serial t
                         :pathname "src/"
@@ -41,10 +43,9 @@
                                      (:file "memory-map")
                                      #+:sbcl (:file "sbcl")
                                      #+:ccl (:file "ccl")
-                                     #-(or :sbcl :ccl) (:file "default")))
-               (:lift-test-config :lift-tests
-                                  :pathname "deoxybyte-unix-test"
-                                  :target-system :deoxybyte-unix)
-               (:cldoc-config :cldoc-documentation
-                              :pathname "doc/html/"
-                              :target-system :deoxybyte-unix)))
+                                     #-(or :sbcl :ccl) (:file "default"))))
+  :perform (test-op :after (op c)
+                    (maybe-run-lift-tests :deoxybyte-unix
+                                          "deoxybyte-unix-test.config"))
+  :perform (doc-op :after (op c)
+                   (maybe-build-cldoc-docs :deoxybyte-unix "doc/html")))
